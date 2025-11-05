@@ -244,4 +244,97 @@ chain_extract = prompt_extract | llm.with_structured_output(ExtractionBatch)
 chain_rulebook = prompt_rulebook | llm.with_structured_output(RuleRow)
 #data = chain_extract.invoke({"data": Str_contect})
 #print("data",data)
+
 #print(chain_rulebook.invoke({"data": data}))
+
+
+
+
+class RuleRow(BaseModel):
+    Expensetype: Optional[str] = Field(
+        default=None,
+        description="Major category of the expense (e.g., Travel, Accommodation, Meals, Office Supplies). "
+                    "Leave blank only if the BRD chunk is unrelated."
+    )
+    SubExpenseType: Optional[str] = Field(
+        default=None,
+        description="Sub-category under Expensetype mentioned explicitly in BRD "
+                    "(e.g., Baggage, Seat Upgrade, Lodging, Meals, Equipment Purchase). "
+                    "Write 'No Sub-Type' if unspecified."
+    )
+    Country: Optional[str] = Field(
+        default=None,
+        description="Geography where the rule applies. Use country codes like US, Canada, All if applicable."
+    )
+    PaymentMethod: Optional[str] = Field(
+        default=None,
+        description="Payment method specified in BRD. Examples: Corporate Amex, Cash OOP, Personal Card."
+    )
+    BookingChannel: Optional[str] = Field(
+        default=None,
+        description="Channel used for booking (e.g., Corporate Booking, Self Booking). Use BRD terminology."
+    )
+    Eligibility: Optional[str] = Field(
+        default=None,
+        description="Who is eligible as per BRD (e.g., Manager and above, All Employees). Use explicit BRD criteria."
+    )
+    Input: Optional[str] = Field(
+        default=None,
+        description="Primary input source for rule validation per BRD, e.g., Receipt, Invoice, Booking Itinerary."
+    )
+    ConditionsforValidations: Optional[str] = Field(
+        default=None,
+        description="Checklist of validations derived from BRD (e.g., receipt checks, date, eligibility, currency)."
+    )
+    Claimsubmissionperiod: Optional[str] = Field(
+        default=None,
+        description="Time window allowed for claim submission (e.g., 90 days, 180 days) as specified in BRD."
+    )
+    ClaimafterTravel: Optional[bool] = Field(
+        default=None,
+        description="True if claims permitted only after travel date; False if allowed before; None if unspecified."
+    )
+    Action: Optional[str] = Field(
+        default=None,
+        description="Outcome for the rule: Approve, Reject, Send Back, Partial Approve, Partial Reject, On Hold."
+    )
+    APRorSBRorREJComments: Optional[str] = Field(
+        default=None,
+        description="Additional comments related to approval, send back, or rejection codes from BRD."
+    )
+    Approvalcode: Optional[str] = Field(
+        default=None,
+        description="List of approval codes applicable as per BRD."
+    )
+    Rejectioncode: Optional[str] = Field(
+        default=None,
+        description="List of rejection codes applicable as per BRD."
+    )
+    Sendbackcode: Optional[str] = Field(
+        default=None,
+        description="List of send-back codes applicable as per BRD."
+    )
+    Exceptionsapprovalrequired: Optional[bool] = Field(
+        default=None,
+        description="True if exceptions require additional approvals; False or None otherwise."
+    )
+    Approverdesignation: Optional[str] = Field(
+        default=None,
+        description="Designated approvers for exceptions as specified in BRD."
+    )
+    ApprovewithException: Optional[str] = Field(
+        default=None,
+        description="Exception context when action is 'Approve with Exception'."
+    )
+    Comments: Optional[str] = Field(
+        default=None,
+        description="Free-form notes to explain the rule context or auditor remarks."
+    )
+    TEcomments: Optional[str] = Field(
+        default=None,
+        description="Additional remarks related to Travel Expense (or similar contexts)."
+    )
+    TERemarks: Optional[str] = Field(
+        default=None,
+        description="Final remarks relevant to Travel Expense or other expense category."
+    )
