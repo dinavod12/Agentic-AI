@@ -362,4 +362,71 @@ def rulegen_node(state: State) -> State:
     return state
 
 
+def validator_node(state: State) -> State:
+    """
+    Clean, normalize, and deduplicate extracted rules.
+    Works perfectly with structured-output rules.
+    """
+    import re
+
+    def normalize_text(v: str):
+        """Standardizes strings for better deduplication."""
+        if v is None:
+            return None
+        if not isinstance(v, str):
+            return v
+
+        v = v.strip()
+        v = re.sub(r"\s+", " ", v)  # normalize whitespace
+        v = v.replace(" ,", ",")
+        v = v.replace(" .", ".")
+        return v if v != "" else None
+
+    def normalize_boolean(v):
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if v in ["yes", "true", "y"]:
+                return True
+            if v in ["no", "false", "n"]:
+                return False
+        return None
+
+    canon = []
+    seen = set()
+
+    for r in state["all_rules"]:
+        # Clean each field
+        r_norm = {}
+        for k, v in r.items():
+
+            # boolean normalization
+            if k in ["ClaimafterTravel", "Exceptionsapprovalrequired"]:
+                v = normalize_boolean(v)
+            else:
+                v = normalize_text(v)
+
+            r_norm[k] = v
+
+        # Build dedup key: only include meaningful fields
+        dedup_key_fields = [
+            "Expensetype", "SubExpenseType", "Country",
+            "PaymentMethod", "BookingChannel", "Eligibility",
+            "ConditionsforValidations", "Action"
+        ]
+
+        key_tuple = tuple((f, r_norm.get(f)) for f in dedup_key_fields)
+
+        if key_tuple not in seen:
+            seen.add(key_tuple)
+            canon.append(r_norm)
+
+    print(f"🧩 After validation/dedup: {len(canon)} unique rules (from {len(state['all_rules'])}).")
+
+    state["all_rules"] = canon
+    return state
+
+
+
 
