@@ -331,3 +331,35 @@ if __name__ == "__main__":
         json.dump(rules, f, ensure_ascii=False, indent=2)
     print(f"💾 Saved rulebook to {out_path}")
 
+
+
+def rulegen_node(state: State) -> State:
+    idx = state["processed_idx"]
+    if idx >= len(state["chunks"]):
+        return state
+
+    chunk = state["chunks"][idx]
+    context = state.get("current_context", "")
+
+    print(f"🧠 Generating rules for chunk {idx+1}/{len(state['chunks'])} ...")
+
+    # Direct Pydantic output (no parsing required)
+    try:
+        result: RuleBookOutput = chain_extract_rules.invoke({
+            "chunk": chunk,
+            "context": context
+        })
+
+        new_rules = [r.model_dump(exclude_none=True) for r in result.rules]
+        print(f"✅ Chunk {idx+1}: {len(new_rules)} rules extracted.")
+    except Exception as e:
+        print(f"⚠️ LLM structured output failed at chunk {idx+1}: {e}")
+        state["stats"]["fail_json"] += 1
+        new_rules = []
+
+    state["all_rules"].extend(new_rules)
+    state["processed_idx"] += 1
+    return state
+
+
+
