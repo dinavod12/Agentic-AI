@@ -163,9 +163,8 @@ class ExtractionBatch(BaseModel):
     )
 
 SYSTEM = (""" You are a knowledgeable financial compliance assistant.  
-            Your task is to analyze Business Requirements Document (BRD) content and extract information relevant for constructing expense policy rules.  
-           Focus only on details explicitly stated in the BRD. 
-           For the given BRD chunk, generate up to five concise, single-topic questions that help capture the following aspects:  
+            Your task is to analyze Business Requirements Document (BRD) content and extract important information relevant for constructing expense policy rules.  
+            For the given BRD data, generate up to 21 concise, single-topic questions that help to capture the following aspects
           - Expense type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input, Conditions for Validations, Claim submission period, Claim after Purchase date	
           - Action(Approve/Reject/Send back), APR or SBR or REJ Comments, Approval code	Rejection code, Send back code, Exceptions approval required(Yes/No), Approver designation, Approve with Exception	
           - Comments,T&E Comments										
@@ -173,15 +172,23 @@ SYSTEM = (""" You are a knowledgeable financial compliance assistant.
           List each question on a separate line without numbering."""
 )
 
+#Focus only on details explicitly stated in the BRD. 
+#For the given BRD chunk, generate up to five concise, single-topic questions that help capture the following aspects:  
 
 SYSTEM_RuleBook = (
     "You are expert AI to transform Business Requirements Documents(BRD) into a Structued Rule Book."
     "Read the BRD data carefully and extract all appicable expense policy rules using the RuleRow schema."
-    "For each ryule, consider all possible combinations of Payment Method, Booking Channel, Eligibility criteria, Country, Expense Type,"
-    "Sub Expense Type and other relevant fields presented in the BRD."
-    "Generate rules for every unique combination stated or implied. If a scenario is not approved or is restricted,"
-    "include a rule indicating the proper action. ONLY use explicit facts the BRD; leave fields blank if unspecified."
+    "For the given BRD Chunk and related context, extract **one accurate and concise rule**. "
+    "Only use details explicitly mentioned in the BRD text. Do not infer unrelated points. "
+    "If a field is not mentioned, leave it blank. "
+    "Your goal is precision - produce a RuleRow represting that include all the RuleRow in this section"
 )
+"Generate rules for every unique combination stated or implied. If a scenario is not approved or is restricted,"
+"For each ryule, consider all possible combinations of Payment Method, Booking Channel, Eligibility criteria, Country, Expense Type,"
+"Sub Expense Type and other relevant fields presented in the BRD."
+
+"include a rule indicating the proper action. ONLY use explicit facts in the BRD; leave fields blank if unspecified."
+""
 
 prompt_extract = ChatPromptTemplate.from_messages([
     ("system", SYSTEM), ("human", "{data}")
@@ -192,9 +199,9 @@ prompt_extract = ChatPromptTemplate.from_messages([
 #])
 
 prompt_rulebook = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_RuleBook), ("human", "Main BRD Section:\n {chunk} \n\n"
-                                            "Related Context (RAG):\n {context} \n\n" 
-                                            "Extract all valid rules.")
+    ("system", SYSTEM_RuleBook), ("human", "BRD Section:\n {chunk} \n\n"
+                                            "Related Context :\n {context} \n\n" 
+                                            "Now extract RuleRow strictly that follow the valid rules.")
 ])
 
 
