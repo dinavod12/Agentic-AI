@@ -1,3 +1,34 @@
+import os
+from dotenv import load_dotenv
+from langchain_openai import AzureChatOpenAI,AzureOpenAIEmbeddings
+
+load_dotenv()
+
+llm = AzureChatOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_version=os.getenv("OPEN_API_VERSION"),
+    model="gpt-4o-mini",  
+    azure_deployment=os.getenv("OPEN_AI_MODEL"), 
+    api_key=os.getenv("OPENAI_API_KEY"),
+    temperature=0.2
+)
+
+embedding = AzureOpenAIEmbeddings(    
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.getenv("OPENAI_API_KEY"),
+    azure_deployment="Kaarthipoc-text-embedding-ada-002",
+    api_version=os.getenv("OPEN_API_VERSION"),
+    )
+
+
+
+#response = llm.invoke("Write a Python function to reverse a string.")
+#print(response.content)
+
+
+
+
+
 from langgraph.graph import StateGraph, END, START
 from chain_agent import chain_extract, chain_rulebook,read_brd_md,chunk_brd_by_langchain,RuleRow
 from langchain_core.messages import BaseMessage,HumanMessage
@@ -13,14 +44,14 @@ import pandas as pd
 #from agent_vectordb import State
 
 def chunk_brd(md_text: str, max_chars: int = 3500) -> List[str]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=400)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=1000)
     docs = splitter.create_documents([md_text])
     return [d.page_content for d in docs]
 
 
 def extractor_node(state: State) -> State:
     md_text = state["md_text"]
-    state["chunks"] = chunk_brd(md_text, max_chars=2500)
+    state["chunks"] = chunk_brd(md_text, max_chars=3500)
     state["processed_idx"] = 0
     state["all_rules"] = []
     if not os.path.exists("./faiss_db"):
@@ -58,6 +89,7 @@ def rulebook_node(state: State) -> State:
         })
     #print("result -=------- result ",result)
     #print("model ---------- model ",result.model_dump(exclude_none=True))
+    print("result",result)
     new_rules = result.model_dump(exclude_none=True)
     print("new rules",new_rules)
     state["all_rules"].append(new_rules)
@@ -122,7 +154,7 @@ def validator_node(state: State) -> State:
     return state
 
 def loop_condition_node(state: State):
-    if state["processed_idx"] < len(state["chunks"]) and state.get("processed_idx", 0) < 50:
+    if state["processed_idx"] < len(state["chunks"]):
         return "rule_book"
     return END
 
@@ -159,28 +191,16 @@ if __name__ == "__main__":
     def read_brd_md(md_path: str) -> str:
         return Path(md_path).read_text(encoding="utf-8")
     
-    md_text = read_brd_md(r"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_2.md")
-
-    final = graph.invoke({"md_text": md_text}, config={"recursion_limit": 100})
+    md_text = " "
+    for i in range(2,5):
+        md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
+    
+    value = chunk_brd(md_text, max_chars=6500)
+    final = graph.invoke({"md_text": md_text}, config={"recursion_limit":5000})
     rules = final.get("all_rules", [])
     stats = final.get("stats", {})
 
     df = pd.DataFrame(rules)
     print(df)
-    #excel_file = "rulebook.xlsx"
-    #df.to_excel(excel_file, index=False)
-
-
-SYSTEM_RuleBook = (
-    "You are expert AI to transform Business Requirements Documents(BRD) into a Structured Rule Book. "
-    "Read the BRD data carefully and extract all applicable expense policy rules using the RuleRow schema. "
-    "For the given BRD Chunk and related context, extract one accurate and concise rule. "
-    "Only use details explicitly mentioned in the BRD text. Do not infer unrelated points. "
-    "If a field is not mentioned, leave it blank. "
-    "Your goal is precision. Generate rules for every unique combination stated or implied. "
-    "If a scenario is not approved or is restricted, indicate the proper action. "
-    "For each rule, consider all combinations of Payment Method, Booking Channel, Eligibility, Country, "
-    "Expense Type, Sub Expense Type and other relevant fields mentioned in the BRD. "
-)
-
-
+    excel_file = "rulebook_2to4_updated.xlsx"
+    df.to_excel(excel_file, index=False)
