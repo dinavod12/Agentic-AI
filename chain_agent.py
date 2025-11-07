@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel,Field
 from typing import Optional,List
 from llm_model import llm
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate,PromptTemplate
 
 def read_brd_md(md_path: str) -> str:
     return Path(md_path).read_text(encoding="utf-8")
@@ -162,10 +162,15 @@ class ExtractionBatch(BaseModel):
         )
     )
 
-SYSTEM = (
-    "You are an expert AI agent for extracting important data or text from Business Requirements Documnents(BRD). "
-    "Carefully read the BRD content provided and extract all relevant information that used to construct expense policy rules. "
-    "Only include details that are explicitly stated in the BRD. Leave fields blank if not mentioned. "
+SYSTEM = (""" You are a knowledgeable financial compliance assistant.  
+            Your task is to analyze Business Requirements Document (BRD) content and extract information relevant for constructing expense policy rules.  
+           Focus only on details explicitly stated in the BRD. 
+           For the given BRD chunk, generate up to five concise, single-topic questions that help capture the following aspects:  
+          - Expense type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input, Conditions for Validations, Claim submission period, Claim after Purchase date	
+          - Action(Approve/Reject/Send back), APR or SBR or REJ Comments, Approval code	Rejection code, Send back code, Exceptions approval required(Yes/No), Approver designation, Approve with Exception	
+          - Comments,T&E Comments										
+          Ensure each question is complete, directly related to the BRD, and avoids compound sentences.  
+          List each question on a separate line without numbering."""
 )
 
 
@@ -182,12 +187,21 @@ prompt_extract = ChatPromptTemplate.from_messages([
     ("system", SYSTEM), ("human", "{data}")
 ])
 
+#prompt_rulebook = ChatPromptTemplate.from_messages([
+#    ("system", SYSTEM_RuleBook), ("human", "{data}")
+#])
+
 prompt_rulebook = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_RuleBook), ("human", "{data}")
+    ("system", SYSTEM_RuleBook), ("human", "Main BRD Section:\n {chunk} \n\n"
+                                            "Related Context (RAG):\n {context} \n\n" 
+                                            "Extract all valid rules.")
 ])
 
-chain_extract = prompt_extract | llm.with_structured_output(ExtractionBatch)
+
+
+chain_extract = prompt_extract | llm
 chain_rulebook = prompt_rulebook | llm.with_structured_output(RuleRow)  
+
 #data = chain_extract.invoke({"data": Str_contect})
 #print("data",data)
 #print(chain_rulebook.invoke({"data": data}))
