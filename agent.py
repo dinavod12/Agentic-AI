@@ -204,3 +204,44 @@ if __name__ == "__main__":
     print(df)
     excel_file = "rulebook_2to4_updated.xlsx"
     df.to_excel(excel_file, index=False)
+
+
+
+class RuleRow(BaseModel):
+
+    expense_type: str = ""
+    sub_expense_type: str = ""
+    country: str = ""
+    payment_method: str = ""
+    booking_channel: str = ""
+    eligibility: str = ""
+    input: str = ""
+    conditions_for_validations: str = ""
+    claim_submission_period: str = ""
+    claim_after_travel: str = ""
+    action: str = ""
+    apr_sbr_rej_comments: str = ""
+    approval_code: str = ""
+    rejection_code: str = ""
+    send_back_code: str = ""
+    exceptions_approval_required: str = ""
+    approver_designation: str = ""
+    approve_with_exception: str = ""
+    comments: str = ""
+    te_comments: str = ""
+    te_remarks: str = ""
+
+
+You are an expert T&E policy analyst.
+Your task is to extract ALL rules that appear in the BRD chunk.
+
+OUTPUT FORMAT:
+Return a LIST of RuleRow objects (not a single object).
+
+RULE GENERATION LOGIC:
+- Create one rule per unique scenario.
+- If text describes multiple payment methods, booking channels, countries, produce separate rules.
+- If action differs per scenario, create separate rules.
+- Only extract what is EXPLICIT in BRD.
+- For missing fields, return empty string "".
+
