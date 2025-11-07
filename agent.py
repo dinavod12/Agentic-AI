@@ -12,40 +12,8 @@ from pathlib import Path
 import pandas as pd
 #from agent_vectordb import State
 
-
-
-from llm_model import embedding
-from langchain_community.vectorstores.faiss import FAISS
-#from langchain_core.vectorstores import Chroma
-#from langchain_community.vectorstores import FAISS
-#import langchain_community.vectorstores
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from chain_agent import read_brd_md
-from chain_agent import read_brd_md
-
-
-def create_vector_store(md_texts):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=500)
-    texts = text_splitter.create_documents([md_texts])
-    #vectordb = Chroma.from_documents(documents=texts, embedding=embedding,persist_directory="./chroma_db")
-    persist_path="./faiss_db"
-    vectordb = FAISS.from_documents(documents=texts, embedding=embedding)
-    vectordb.save_local(persist_path)
-    return vectordb
-
-def load_vector_store():
-    vectordb = FAISS.load_local("./faiss_db",embeddings=embedding,allow_dangerous_deserialization=True)
-    return vectordb
-
-#RAG
-
-def retrieve_similar_documents(query, k):
-    vectordb = load_vector_store()
-    results = vectordb.similarity_search(query, k=k)
-    return [doc.page_content for doc in results]
-
-def chunk_brd(md_text: str, max_chars: int = 2500) -> List[str]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=200)
+def chunk_brd(md_text: str, max_chars: int = 3500) -> List[str]:
+    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=400)
     docs = splitter.create_documents([md_text])
     return [d.page_content for d in docs]
 
@@ -68,6 +36,7 @@ def rag_node(state: State) -> State:
     #print("chunk_str",state["chunks"][idx])
     chunk = chain_extract.invoke({"data" : state["chunks"][idx]})
     retrieved = retrieve_similar_documents(chunk.content, k=4)
+    #retrieved = retrieve_similar_documents(state["chunks"][idx], k=3)
     #print("retrieved",retrieved)
     #retrieved = [doc.page_content for doc in retrieved]
     state["current_context"] = "\n\n".join(retrieved)
@@ -91,8 +60,10 @@ def rulebook_node(state: State) -> State:
     #print("model ---------- model ",result.model_dump(exclude_none=True))
     new_rules = result.model_dump(exclude_none=True)
     print("new rules",new_rules)
-
     state["all_rules"].append(new_rules)
+    #print("result",result)
+    #for r in result:
+    #    state["all_rules"].append(r.model_dump(exclude_none=True))
     state["processed_idx"] += 1
     return state
 
@@ -195,5 +166,6 @@ if __name__ == "__main__":
     stats = final.get("stats", {})
 
     df = pd.DataFrame(rules)
-    excel_file = "rulebook.xlsx"
-    df.to_excel(excel_file, index=False)
+    print(df)
+    #excel_file = "rulebook.xlsx"
+    #df.to_excel(excel_file, index=False)
