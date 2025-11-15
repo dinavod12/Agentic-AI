@@ -1,34 +1,3 @@
-import os
-from dotenv import load_dotenv
-from langchain_openai import AzureChatOpenAI,AzureOpenAIEmbeddings
-
-load_dotenv()
-
-llm = AzureChatOpenAI(
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_version=os.getenv("OPEN_API_VERSION"),
-    model="gpt-4o-mini",  
-    azure_deployment=os.getenv("OPEN_AI_MODEL"), 
-    api_key=os.getenv("OPENAI_API_KEY"),
-    temperature=0.2
-)
-
-embedding = AzureOpenAIEmbeddings(    
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=os.getenv("OPENAI_API_KEY"),
-    azure_deployment="Kaarthipoc-text-embedding-ada-002",
-    api_version=os.getenv("OPEN_API_VERSION"),
-    )
-
-
-
-#response = llm.invoke("Write a Python function to reverse a string.")
-#print(response.content)
-
-
-
-
-
 from langgraph.graph import StateGraph, END, START
 from chain_agent import chain_extract, chain_rulebook,read_brd_md,chunk_brd_by_langchain,RuleRow
 from langchain_core.messages import BaseMessage,HumanMessage
@@ -41,20 +10,36 @@ from chain_agent import RuleRow,chain_rulebook,chain_extract
 import os
 from pathlib import Path
 import pandas as pd
+from sentence_transformers import CrossEncoder
+import numpy as np
+from langgraph.checkpoint.memory import MemorySaver
 #from agent_vectordb import State
 
-def chunk_brd(md_text: str, max_chars: int = 3500) -> List[str]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=1000)
+def func_ranking_rag(query:str,retrieved_documents:List[dict]):
+    unique_documents = []
+    lst_score = []
+    for i in range(len(retrieved_documents)):
+        unique_documents.append(retrieved_documents[i]["docs"])
+        lst_score.append(retrieved_documents[i]["score"])
+    scores_float = np.array([float(s) for s in lst_score])
+    top_indices = np.argsort(scores_float)[::-1][:2]
+    top_documents = [unique_documents[i] for i in top_indices]
+    context = "\n\n".join(top_documents)
+    return context
+    
+
+def chunk_brd(md_text: str, max_chars: int) -> List[str]:
+    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=200)
     docs = splitter.create_documents([md_text])
     return [d.page_content for d in docs]
 
 
 def extractor_node(state: State) -> State:
     md_text = state["md_text"]
-    state["chunks"] = chunk_brd(md_text, max_chars=3500)
+    state["chunks"] = chunk_brd(md_text, max_chars=2000)
     state["processed_idx"] = 0
     state["all_rules"] = []
-    if not os.path.exists("./faiss_db"):
+    if not os.path.exists("./faiss_db_updated_All"):
         create_vector_store(md_text)
     return state
 
@@ -65,14 +50,24 @@ def rag_node(state: State) -> State:
         state["current_context"] = ""
         return state
     #print("chunk_str",state["chunks"][idx])
-    chunk = chain_extract.invoke({"data" : state["chunks"][idx]})
-    retrieved = retrieve_similar_documents(chunk.content, k=4)
+    chunk = chain_extract.invoke({"data" : state["chunks"][idx]}).model_dump(exclude_none=True)
+    print("chunck --------------------- ",chunk)
+    
+    Expensetype = chunk["Expensetype"]
+    print("chunk ----------------- -------------- ",chunk)
+    row = chunk["rows"]
+    retrieved = retrieve_similar_documents(row, k=10)
     #retrieved = retrieve_similar_documents(state["chunks"][idx], k=3)
     #print("retrieved",retrieved)
     #retrieved = [doc.page_content for doc in retrieved]
-    state["current_context"] = "\n\n".join(retrieved)
+    retrieved = func_ranking_rag(row,retrieved)
+    print("retrieved --------",retrieved)
+    print("retrieved ---------- ",len(retrieved))
+    state["current_context"] = "\n\n".join(retrieved)+ "\n"  + state["chunks"][idx]
+    state["Expensetype"] = Expensetype
     #print("retrived","\n\n".join(retrieved))
     return state
+    
 
 
 def rulebook_node(state: State) -> State:
@@ -80,22 +75,25 @@ def rulebook_node(state: State) -> State:
     if idx >= len(state["chunks"]):
         return state
 
-    chunk = state["chunks"][idx]
+    ExpenseType = state.get("ExpenseType","")
     context = state.get("current_context", "")
+    print("token lenght------------------ ",len(context))
     #print("context -------------- context ----",context)
-    result: RuleRow = chain_rulebook.invoke({
-            "chunk": chunk,
+    result: List[RuleRow] = chain_rulebook.invoke({
+            "ExpenseType": ExpenseType,
             "context": context
         })
     #print("result -=------- result ",result)
     #print("model ---------- model ",result.model_dump(exclude_none=True))
-    print("result",result)
-    new_rules = result.model_dump(exclude_none=True)
-    print("new rules",new_rules)
-    state["all_rules"].append(new_rules)
+    print("result ----------------- ------------ ",result)
+    #new_rules = result.model_dump(exclude_none=True)
+    new_rules = [r for r in result['args']]
+    print("new rules -------------- -------------- ",new_rules)
+    state["all_rules"].extend(new_rules)
     #print("result",result)
     #for r in result:
     #    state["all_rules"].append(r.model_dump(exclude_none=True))
+    print("all_rules -------------- -------------- ",state["all_rules"])
     state["processed_idx"] += 1
     return state
 
@@ -167,6 +165,7 @@ class State(TypedDict):
     chunks: List[str]
     processed_idx: int
     current_context: str
+    Expensetype: str
     all_rules: List[Dict]   
 
  
@@ -182,7 +181,7 @@ builder.add_edge("extractor", "rag")
 builder.add_conditional_edges("rag", loop_condition_node, {"rule_book": "rulegen", END: END})
 builder.add_edge("rulegen","rag")
 #builder.add_edge("validator", END)
-
+#memory = MemorySaver()
 graph = builder.compile()
 graph.get_graph().print_ascii()
 
@@ -191,57 +190,26 @@ if __name__ == "__main__":
     def read_brd_md(md_path: str) -> str:
         return Path(md_path).read_text(encoding="utf-8")
     
-    md_text = " "
-    for i in range(2,5):
-        md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
-    
-    value = chunk_brd(md_text, max_chars=6500)
-    final = graph.invoke({"md_text": md_text}, config={"recursion_limit":5000})
+    #md_text = " "
+    #for i in range(2,5):
+    #    md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
+    #    md_text+="\n"
+    md_text = read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_2.md")
+    #thread = {"configurable": {"thread_id": "777"}}
+    #value = chunk_brd(md_text, max_chars=3500)
+    final = graph.invoke({"md_text": md_text},config={"recursion_limit":5000})
     rules = final.get("all_rules", [])
     stats = final.get("stats", {})
 
-    df = pd.DataFrame(rules)
+    ruleses = []
+
+    for i in rules:
+        if i not in ruleses:
+            ruleses.append(i)
+
+    print("Length ---- rules",len(rules))
+    print("Length ----- ruleses",len(ruleses))
+    df = pd.DataFrame(ruleses)
     print(df)
-    excel_file = "rulebook_2to4_updated.xlsx"
+    excel_file = "rulebook_airfare_2_1_1_cond.xlsx"
     df.to_excel(excel_file, index=False)
-
-
-
-class RuleRow(BaseModel):
-
-    expense_type: str = ""
-    sub_expense_type: str = ""
-    country: str = ""
-    payment_method: str = ""
-    booking_channel: str = ""
-    eligibility: str = ""
-    input: str = ""
-    conditions_for_validations: str = ""
-    claim_submission_period: str = ""
-    claim_after_travel: str = ""
-    action: str = ""
-    apr_sbr_rej_comments: str = ""
-    approval_code: str = ""
-    rejection_code: str = ""
-    send_back_code: str = ""
-    exceptions_approval_required: str = ""
-    approver_designation: str = ""
-    approve_with_exception: str = ""
-    comments: str = ""
-    te_comments: str = ""
-    te_remarks: str = ""
-
-
-You are an expert T&E policy analyst.
-Your task is to extract ALL rules that appear in the BRD chunk.
-
-OUTPUT FORMAT:
-Return a LIST of RuleRow objects (not a single object).
-
-RULE GENERATION LOGIC:
-- Create one rule per unique scenario.
-- If text describes multiple payment methods, booking channels, countries, produce separate rules.
-- If action differs per scenario, create separate rules.
-- Only extract what is EXPLICIT in BRD.
-- For missing fields, return empty string "".
-
