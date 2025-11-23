@@ -1,0 +1,309 @@
+[
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.1",
+    "stage": "Airfare Expense",
+    "comment": "In Concur, under Report Header validate the following: Employee Group United States/Canada Policy TypeBusiness Expense - US/Business Expense - Canada Expense TypeAirfare Business Purpose Employee Grade Level Check the Expense Type Airfare [for each expense type (Not under Report Header)] Proceed to step 2.2 If not, send back the expense to the associate using valid SBR codes (Refer 2.7 & 2.8) for code details): Ex: | In Concur, under Report Header validate the following: Employee Group United States/Canada Policy TypeBusiness Expense - US/Business Expense - Canada Expense TypeAirfare Business Purpose Employee Grade Level Check the Expense Type Airfare [for each expense type (Not under Report Header)] Proceed to step 2.2 If not, send back the expense to the associate using valid SBR codes (Refer 2.7 & 2.8) for code details): Ex:",
+    "attachment": "Validation Rules: Class of Travel – Executives Chiefs / Presidents (in grade levels 15 or below: Business class is allowed irrespective of hours. VP/SVP: For VP and SVP: All domestic flights irrespective of flying hours need to be booked in economy class only. For International flights, above 6 hours, Lowest Logical Business class & fare cap of USD 7000 (Round Trip) else it would be Economy class. All Others: Economy Need CFO approval(CFOTravelException (Cognizant)) to take the exception on the above. Travel Restrictions – Senior Executives CEO and CFO must not travel on the same flight. CFO must not travel with CAO or Controller. CEO/CFO should travel with no more than 3 other Senior Executives. No more than 4 Senior Executives or Board Members should travel on the same flight. For additional rules refer:",
+    "row_index": 11,
+    "nested_tables": [
+      [
+        "Send Back Code"
+      ],
+      [
+        "SBR-WRNPOL - Wrong Policy Type Selected"
+      ],
+      [
+        "SBR-WRNEXP - Wrong Expense Type Selected (Based on Receipt)"
+      ],
+      [
+        "Send Back Code"
+      ],
+      [
+        "SBR-WRNPOL - Wrong Policy Type Selected"
+      ],
+      [
+        "SBR-WRNEXP - Wrong Expense Type Selected (Based on Receipt)"
+      ],
+      [
+        "Policy document to be referred",
+        "Link"
+      ],
+      [
+        "1. Global T&E Policy",
+        "Global T&E Policy.pdf"
+      ],
+      [
+        "2. Global Travel and Expense Procedures",
+        "Global Travel Expense Procedures.pdf"
+      ],
+      [
+        "3. Local Country Addendum",
+        "Local Country T&E Policy Addendum.pdf"
+      ],
+      [
+        "4. Addendum Tables",
+        "Addendum Tables 2025.xlsx"
+      ]
+    ]
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.2",
+    "stage": "Airfare - Amex+MyCWT",
+    "comment": "If the Payment Type is Amex and if the travel is booked through Cognizant corporate channel (MyCWT); If Yes, then proceed to validate the below in the CWT Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. Note1: For transactions made using an Amex card, a receipt is not required if the amount is less than $75. Additionally, for out-of-pocket cash transactions, no receipt is needed if the amount is less than $25. This is applicable only for US and not Canada. Note2: When the trip is booked through MyCWT the details can also be validated through an itinerary which comes directly for Concur if the MyCWT Receipt is not available. (Click on the Airplane Symbol Record Locator Travel Inventory) | If the Payment Type is Amex and if the travel is booked through Cognizant corporate channel (MyCWT); If Yes, then proceed to validate the below in the CWT Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. Note1: For transactions made using an Amex card, a receipt is not required if the amount is less than $75. Additionally, for out-of-pocket cash transactions, no receipt is needed if the amount is less than $25. This is applicable only for US and not Canada. Note2: When the trip is booked through MyCWT the details can also be validated through an itinerary which comes directly for Concur if the MyCWT Receipt is not available. (Click on the Airplane Symbol Record Locator Travel Inventory)",
+    "attachment": "Note: MyCWT is the only corporate channel If the entry created in concur is of Amex and MyCWT then the Blue Airplane and Green card symbols will be available. If the travel is booked through MyCWT then the receipt attached will have name : Reference Amex card transaction: (Click on the Airplane Symbol Record Locator Travel Inventory)",
+    "row_index": 12,
+    "nested_tables": []
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.3",
+    "stage": "Airfare -Cash+MyCWT",
+    "comment": "If the Payment Type is Cash out of pocket (personal credit card) and if the travel is booked through Cognizant corporate channel (MyCWT); The associate must provide the following along with CWT Receipt: Payment Proof (Credit card statement) Boarding pass Declaration from the associate If yes, then proceed to validate the below in the CWT Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy Note: If an associate submits an airfare expense by mistakenly attaching reservation (itinerary) details, the expense should be Sent back for Review. The associate should be instructed to delete the reservation and resubmit the expense. If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. | If the Payment Type is Cash out of pocket (personal credit card) and if the travel is booked through Cognizant corporate channel (MyCWT); The associate must provide the following along with CWT Receipt: Payment Proof (Credit card statement) Boarding pass Declaration from the associate If yes, then proceed to validate the below in the CWT Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy Note: If an associate submits an airfare expense by mistakenly attaching reservation (itinerary) details, the expense should be Sent back for Review. The associate should be instructed to delete the reservation and resubmit the expense. If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments.",
+    "attachment": "Note: Corporate Amex card numbers to be updated. Refer Point 16 under – Section 2.9",
+    "row_index": 13,
+    "nested_tables": []
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.4",
+    "stage": "Airfare -SelfBooked + Amex",
+    "comment": "If the Payment Type is Amex and if the travel is not booked through Cognizant corporate channel (Self booked) If Yes, then the associate must provide the below: Airlines invoice Approval email from Global Travel services team.[ TravelMailbox@cognizant.com] If Yes, then proceed to validate the below in the Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. Note: Use the code APR code A-APR-SLFA while approving Self booked travels. | If the Payment Type is Amex and if the travel is not booked through Cognizant corporate channel (Self booked) If Yes, then the associate must provide the below: Airlines invoice Approval email from Global Travel services team.[ TravelMailbox@cognizant.com] If Yes, then proceed to validate the below in the Receipt : Date of Travel Amount and currency Duration of the Travel Name of the Associate Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. Note: Use the code APR code A-APR-SLFA while approving Self booked travels.",
+    "attachment": "Note: Blue Airplane symbol will not be present for self-booked travels.",
+    "row_index": 14,
+    "nested_tables": []
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.5",
+    "stage": "Airfare -Selfbooked+Cash",
+    "comment": "If the Payment Type is Cash out of pocket and if the travel is not booked through Cognizant corporate channel (Self booked) then: If Yes, then the associate must provide the below: Airlines invoice Approval email from Global Travel services team.[ TravelMailbox@cognizant.com] Payment Proof (Credit card statement) Boarding pass Declaration from the associate f Yes, then proceed to validate the below in the Receipt : Date of Travel Name of the Associate Amount and currency Duration of the Travel Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 4.7 & 4.8) and respective comments. Note: Use the code APR code A-APR-SLFA while approving Self booked travels. . | If the Payment Type is Cash out of pocket and if the travel is not booked through Cognizant corporate channel (Self booked) then: If Yes, then the associate must provide the below: Airlines invoice Approval email from Global Travel services team.[ TravelMailbox@cognizant.com] Payment Proof (Credit card statement) Boarding pass Declaration from the associate f Yes, then proceed to validate the below in the Receipt : Date of Travel Name of the Associate Amount and currency Duration of the Travel Employee Group/Employee Grade Level for Class of Travel Class of Travel and limit - Eligible as per Policy If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 4.7 & 4.8) and respective comments. Note: Use the code APR code A-APR-SLFA while approving Self booked travels. .",
+    "attachment": "",
+    "row_index": 15,
+    "nested_tables": []
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.6",
+    "stage": "Sub expenses for Airfare",
+    "comment": "All the sub expenses below can be raised with Airfare if they are done via Amex/Personal credit card. Baggage: (1 bag can be claimed for all associates, if there is no free allowance from Airline) -- All associates Validate the Itinerary/Airline Receipt to find details on free baggage. Airfare Cancellation/rescheduling charges --All associates: For cash out of pocket transactions ensure the travel date is over before applying the APR code- A-APR-CANC. Also get a declaration that there is no refund credited for his cancellation in case if claims full amount. Seat/Cabin Upgrade - D+ Premium Lounge - D+ Agency booking fees: The ticket ID should match the Ticket ID used for airfare expense;(Same airfare receipt to be used) - All associates In Flight WIFI – All associates. Others (not sub expenses but are raised under Airfare): Baggage wrapping Charges - All associates Travel insurance - All associates. [ No additional travel insurance apart from the one booked by default with travel can be claimed] For all the above sub expenses associates must provide the EMD Receipt/other receipt provided by Airline; the payment proof must be provided if the expense is done through personal credit card for cancellation charges and the charges should be highlighted in the Receipt. If yes, then proceed to validate the below in Concur Report Header: Employee Grade Level Business Purpose If yes, then proceed to validate the below in the Receipt: Date of Travel Amount and currency Name of the Associate D+ approval if the associate raising the request is D- for sub expense (3, 4) Note: Appropriate APR code to be captured while approving for D+ and D- based on nature of the expense claim If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments. | All the sub expenses below can be raised with Airfare if they are done via Amex/Personal credit card. Baggage: (1 bag can be claimed for all associates, if there is no free allowance from Airline) -- All associates Validate the Itinerary/Airline Receipt to find details on free baggage. Airfare Cancellation/rescheduling charges --All associates: For cash out of pocket transactions ensure the travel date is over before applying the APR code- A-APR-CANC. Also get a declaration that there is no refund credited for his cancellation in case if claims full amount. Seat/Cabin Upgrade - D+ Premium Lounge - D+ Agency booking fees: The ticket ID should match the Ticket ID used for airfare expense;(Same airfare receipt to be used) - All associates In Flight WIFI – All associates. Others (not sub expenses but are raised under Airfare): Baggage wrapping Charges - All associates Travel insurance - All associates. [ No additional travel insurance apart from the one booked by default with travel can be claimed] For all the above sub expenses associates must provide the EMD Receipt/other receipt provided by Airline; the payment proof must be provided if the expense is done through personal credit card for cancellation charges and the charges should be highlighted in the Receipt. If yes, then proceed to validate the below in Concur Report Header: Employee Grade Level Business Purpose If yes, then proceed to validate the below in the Receipt: Date of Travel Amount and currency Name of the Associate D+ approval if the associate raising the request is D- for sub expense (3, 4) Note: Appropriate APR code to be captured while approving for D+ and D- based on nature of the expense claim If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments.",
+    "attachment": "All the sub expenses below can be raised with Airfare if they are done via Amex/Personal credit card. Baggage: (1 bag can be claimed for all associates, if there is no free allowance from Airline) -- All associates Validate the Itinerary/Airline Receipt to find details on free baggage. Airfare Cancellation/rescheduling charges --All associates: For cash out of pocket transactions ensure the travel date is over before applying the APR code- A-APR-CANC. Also get a declaration that there is no refund credited for his cancellation in case if claims full amount. Seat/Cabin Upgrade - D+ Premium Lounge - D+ Agency booking fees: The ticket ID should match the Ticket ID used for airfare expense;(Same airfare receipt to be used) - All associates In Flight WIFI – All associates. Others (not sub expenses but are raised under Airfare): Baggage wrapping Charges - All associates Travel insurance - All associates. [ No additional travel insurance apart from the one booked by default with travel can be claimed] For all the above sub expenses associates must provide the EMD Receipt/other receipt provided by Airline; the payment proof must be provided if the expense is done through personal credit card for cancellation charges and the charges should be highlighted in the Receipt. If yes, then proceed to validate the below in Concur Report Header: Employee Grade Level Business Purpose If yes, then proceed to validate the below in the Receipt: Date of Travel Amount and currency Name of the Associate D+ approval if the associate raising the request is D- for sub expense (3, 4) Note: Appropriate APR code to be captured while approving for D+ and D- based on nature of the expense claim If all the above are true, then approve the Expense else send back for review asking for additional updates using the appropriate codes. (Refer 2.7 & 2.8) and respective comments.",
+    "row_index": 16,
+    "nested_tables": []
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.7",
+    "stage": "Airfare Approval codes",
+    "comment": "To approve the expense/sub expense raised under the type - Airfare use the code below as per scenario: Additionally, generic codes can be used to approve the expense as needed. | To approve the expense/sub expense raised under the type - Airfare use the code below as per scenario: Additionally, generic codes can be used to approve the expense as needed.",
+    "attachment": "Details of generic approval code Types List of all Approval codes: EC & ELT list: ( List updates every month)",
+    "row_index": 17,
+    "nested_tables": [
+      [
+        "Approval Codes",
+        "Approval Codes"
+      ],
+      [
+        "Code",
+        "Description"
+      ],
+      [
+        "A-APR-TRIN",
+        "Travel Insurance charges"
+      ],
+      [
+        "A-APR-SLFA",
+        "Self-Booked Airfare"
+      ],
+      [
+        "D-APR-SEGR",
+        "Seat Upgrade Charges"
+      ],
+      [
+        "D-APR-LOUN",
+        "Premium Lounge Fees"
+      ],
+      [
+        "A-APR-CANC",
+        "Cancellation / Rescheduled charges"
+      ],
+      [
+        "A-APR-BORD",
+        "Boarding Pass"
+      ],
+      [
+        "A-APR-BAGW",
+        "Baggage Wrapping charges"
+      ],
+      [
+        "Approval Codes",
+        "Approval Codes"
+      ],
+      [
+        "Code",
+        "Description"
+      ],
+      [
+        "A-APR-TRIN",
+        "Travel Insurance charges"
+      ],
+      [
+        "A-APR-SLFA",
+        "Self-Booked Airfare"
+      ],
+      [
+        "D-APR-SEGR",
+        "Seat Upgrade Charges"
+      ],
+      [
+        "D-APR-LOUN",
+        "Premium Lounge Fees"
+      ],
+      [
+        "A-APR-CANC",
+        "Cancellation / Rescheduled charges"
+      ],
+      [
+        "A-APR-BORD",
+        "Boarding Pass"
+      ],
+      [
+        "A-APR-BAGW",
+        "Baggage Wrapping charges"
+      ],
+      [
+        "Description",
+        "Code",
+        "Details"
+      ],
+      [
+        "Approve and Report",
+        "APR",
+        "No Prior approval needed"
+      ],
+      [
+        "Approve with Exception",
+        "APE",
+        "Exceptional approval needed. ( If the request is raised by D, then get an approval from his HCM manager)"
+      ],
+      [
+        "Approve with E&C",
+        "APE&C",
+        "Approval needed from Ethics and Compliance team"
+      ],
+      [
+        "Approve with EC",
+        "APEC",
+        "Approval needed from Executive Committee"
+      ]
+    ]
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.8",
+    "stage": "Airfare Rejection Code",
+    "comment": "To Reject or to Send Back the expense/sub expense raised under the type - Airfare use the code below as per scenario: Additionally, the generic code can be used to reject the expense as needed. | To Reject or to Send Back the expense/sub expense raised under the type - Airfare use the code below as per scenario: Additionally, the generic code can be used to reject the expense as needed.",
+    "attachment": "Details of the Rejection Code: List of Rejection Codes:",
+    "row_index": 18,
+    "nested_tables": [
+      [
+        "Rejection Codes",
+        "Rejection Codes"
+      ],
+      [
+        "Code",
+        "Description"
+      ],
+      [
+        "SBR-SLFBKG",
+        "Self-Booked Airfare"
+      ],
+      [
+        "SBR-DEPBUS",
+        "Dependent Business Travel"
+      ],
+      [
+        "REJ-SEATUP",
+        "Seat Upgrade Charges"
+      ],
+      [
+        "REJ-LOUNGE",
+        "Premium Lounge Fee"
+      ],
+      [
+        "REJ-LOST",
+        "Lost, Stolen, and Damaged Property"
+      ],
+      [
+        "REJ-AIRFAR",
+        "Airfare Exceptions (e.g., Airline clubs, Global Entry, TSA Pre-check, CLEAR membership fees)"
+      ],
+      [
+        "Rejection Codes",
+        "Rejection Codes"
+      ],
+      [
+        "Code",
+        "Description"
+      ],
+      [
+        "SBR-SLFBKG",
+        "Self-Booked Airfare"
+      ],
+      [
+        "SBR-DEPBUS",
+        "Dependent Business Travel"
+      ],
+      [
+        "REJ-SEATUP",
+        "Seat Upgrade Charges"
+      ],
+      [
+        "REJ-LOUNGE",
+        "Premium Lounge Fee"
+      ],
+      [
+        "REJ-LOST",
+        "Lost, Stolen, and Damaged Property"
+      ],
+      [
+        "REJ-AIRFAR",
+        "Airfare Exceptions (e.g., Airline clubs, Global Entry, TSA Pre-check, CLEAR membership fees)"
+      ],
+      [
+        "Description",
+        "Code",
+        "Details"
+      ],
+      [
+        "Send Back Report",
+        "SBR",
+        "Associate can resubmit with additional proof or supporting"
+      ],
+      [
+        "Reject",
+        "REJ",
+        "Not Reimbursable"
+      ]
+    ]
+  },
+  {
+    "in_scope": "Yes",
+    "main_step": "2",
+    "sub_step": "2.9",
+    "stage": "Additional Airfare & Generic Validation Rules",
+    "comment": "If an associate submits an airfare expense by mistakenly attaching reservation (itinerary) details, the expense should be Sent back for Review. The associate should be instructed to delete the reservation and resubmit the expense. If the airfare is created for Relocation purpose can be checked using T&E app – City and assignment details.(Keywords: Relo, Transfer, Relocation, Payroll change) Any trip booked using a personal card can be approved only after date of travel (SBR Code) and the boarding pass is not mandatory to approve the expense raised post travel date; use APR code - A-APR-BORD Any trip booked using Amex card can be approved before the travel date. All the personal expenses(Ex: Personal shopping, Dependents travel during business visits etc.) done using Amex card should be marked as personal while submitting the expense and payment proof made to Amex should be available to approve the expense. All the approvals considered for the APE code should be Exceptionally approved and the Grade/Band of the approver should be validated before approving the expense. Any expense which is partially rejected will be shown as a new Expense report and the word “Addendum to” gets added to the new Report. But refer to the Comments and Audit trail to understand the history of the report. When the expense is raised by the Supervisor on behalf of his reportees (Supervisors Amex card is used); details of associates for whom it is used must be provided. (Emp ID & Name); Use the APR code to approve this. This is applicable for Self-booked cases. Generally, if the Payment mode is Visa/Master/UPI and clearly available in Receipt, the expense can be approved w/o additional payment proof. Respective comments should be added while Using REJ or SBR codes. Use the code with highest priority in approval code section, rest details can be added in the comments section if there is more than 1 review comment. The comments should be written at both Item line level and Report Header level so that the email notification is triggered to the user. Any validation rule applied for Amex card is applicable for BTA card as well. Any expense which is greater than 180 days to be approved by EC (Chiefs and Presidents reporting to CEO). The no. of days can be calculated by verifying the Initial submission date in concur and transaction date in Receipt. Use the APEC code. If the expense is raised by EA (Executive assistant ) or by EVP +, or if the workflow approver is SVP+, Auditor sends an email seeking clarification for first 2 days before sending back the report to avoid delays, late fees etc. If the Business Purpose is mentioned as Business travel, short trip, client meeting, short term Business trip etc., Dependents are not eligible to claim travel expenses. For any kind of Amex Corporate card related- Cancellation transactions – make sure the corresponding original positive transaction is already submitted. Seek Report ID or Key from associate in case if any clarification is needed. The Original expense line should not be marked as Personal. Receipt Rule for US: For transactions made using an Amex card, a receipt is not required if the amount is less than $75. Additionally, for out-of-pocket cash transactions, no receipt is needed if the amount is less than $25. This is applicable only for US and not Canada. Amex Wallet: In case there is no clarity on whether the Amex card used is Personal or Corporate, below steps can be performed in Concur to validate the same: Click on Expenses Reporting Intelligence Amex Transaction assigned & unassigned Enter the Emp ID in the search field Download the Report in Excel. Use the sheets available in Excel Unassigned(Not submitted)/ Assigned (Submitted) and details such as Transaction date, amount, currency etc. | If an associate submits an airfare expense by mistakenly attaching reservation (itinerary) details, the expense should be Sent back for Review. The associate should be instructed to delete the reservation and resubmit the expense. If the airfare is created for Relocation purpose can be checked using T&E app – City and assignment details.(Keywords: Relo, Transfer, Relocation, Payroll change) Any trip booked using a personal card can be approved only after date of travel (SBR Code) and the boarding pass is not mandatory to approve the expense raised post travel date; use APR code - A-APR-BORD Any trip booked using Amex card can be approved before the travel date. All the personal expenses(Ex: Personal shopping, Dependents travel during business visits etc.) done using Amex card should be marked as personal while submitting the expense and payment proof made to Amex should be available to approve the expense. All the approvals considered for the APE code should be Exceptionally approved and the Grade/Band of the approver should be validated before approving the expense. Any expense which is partially rejected will be shown as a new Expense report and the word “Addendum to” gets added to the new Report. But refer to the Comments and Audit trail to understand the history of the report. When the expense is raised by the Supervisor on behalf of his reportees (Supervisors Amex card is used); details of associates for whom it is used must be provided. (Emp ID & Name); Use the APR code to approve this. This is applicable for Self-booked cases. Generally, if the Payment mode is Visa/Master/UPI and clearly available in Receipt, the expense can be approved w/o additional payment proof. Respective comments should be added while Using REJ or SBR codes. Use the code with highest priority in approval code section, rest details can be added in the comments section if there is more than 1 review comment. The comments should be written at both Item line level and Report Header level so that the email notification is triggered to the user. Any validation rule applied for Amex card is applicable for BTA card as well. Any expense which is greater than 180 days to be approved by EC (Chiefs and Presidents reporting to CEO). The no. of days can be calculated by verifying the Initial submission date in concur and transaction date in Receipt. Use the APEC code. If the expense is raised by EA (Executive assistant ) or by EVP +, or if the workflow approver is SVP+, Auditor sends an email seeking clarification for first 2 days before sending back the report to avoid delays, late fees etc. If the Business Purpose is mentioned as Business travel, short trip, client meeting, short term Business trip etc., Dependents are not eligible to claim travel expenses. For any kind of Amex Corporate card related- Cancellation transactions – make sure the corresponding original positive transaction is already submitted. Seek Report ID or Key from associate in case if any clarification is needed. The Original expense line should not be marked as Personal. Receipt Rule for US: For transactions made using an Amex card, a receipt is not required if the amount is less than $75. Additionally, for out-of-pocket cash transactions, no receipt is needed if the amount is less than $25. This is applicable only for US and not Canada. Amex Wallet: In case there is no clarity on whether the Amex card used is Personal or Corporate, below steps can be performed in Concur to validate the same: Click on Expenses Reporting Intelligence Amex Transaction assigned & unassigned Enter the Emp ID in the search field Download the Report in Excel. Use the sheets available in Excel Unassigned(Not submitted)/ Assigned (Submitted) and details such as Transaction date, amount, currency etc.",
+    "attachment": "If an associate submits an airfare expense by mistakenly attaching reservation (itinerary) details, the expense should be Sent back for Review. The associate should be instructed to delete the reservation and resubmit the expense. If the airfare is created for Relocation purpose can be checked using T&E app – City and assignment details.(Keywords: Relo, Transfer, Relocation, Payroll change) Any trip booked using a personal card can be approved only after date of travel (SBR Code) and the boarding pass is not mandatory to approve the expense raised post travel date; use APR code - A-APR-BORD Any trip booked using Amex card can be approved before the travel date. All the personal expenses(Ex: Personal shopping, Dependents travel during business visits etc.) done using Amex card should be marked as personal while submitting the expense and payment proof made to Amex should be available to approve the expense. All the approvals considered for the APE code should be Exceptionally approved and the Grade/Band of the approver should be validated before approving the expense. Any expense which is partially rejected will be shown as a new Expense report and the word “Addendum to” gets added to the new Report. But refer to the Comments and Audit trail to understand the history of the report. When the expense is raised by the Supervisor on behalf of his reportees (Supervisors Amex card is used); details of associates for whom it is used must be provided. (Emp ID & Name); Use the APR code to approve this. This is applicable for Self-booked cases. Generally, if the Payment mode is Visa/Master/UPI and clearly available in Receipt, the expense can be approved w/o additional payment proof. Respective comments should be added while Using REJ or SBR codes. Use the code with highest priority in approval code section, rest details can be added in the comments section if there is more than 1 review comment. The comments should be written at both Item line level and Report Header level so that the email notification is triggered to the user. Any validation rule applied for Amex card is applicable for BTA card as well. Any expense which is greater than 180 days to be approved by EC (Chiefs and Presidents reporting to CEO). The no. of days can be calculated by verifying the Initial submission date in concur and transaction date in Receipt. Use the APEC code. If the expense is raised by EA (Executive assistant ) or by EVP +, or if the workflow approver is SVP+, Auditor sends an email seeking clarification for first 2 days before sending back the report to avoid delays, late fees etc. If the Business Purpose is mentioned as Business travel, short trip, client meeting, short term Business trip etc., Dependents are not eligible to claim travel expenses. For any kind of Amex Corporate card related- Cancellation transactions – make sure the corresponding original positive transaction is already submitted. Seek Report ID or Key from associate in case if any clarification is needed. The Original expense line should not be marked as Personal. Receipt Rule for US: For transactions made using an Amex card, a receipt is not required if the amount is less than $75. Additionally, for out-of-pocket cash transactions, no receipt is needed if the amount is less than $25. This is applicable only for US and not Canada. Amex Wallet: In case there is no clarity on whether the Amex card used is Personal or Corporate, below steps can be performed in Concur to validate the same: Click on Expenses Reporting Intelligence Amex Transaction assigned & unassigned Enter the Emp ID in the search field Download the Report in Excel. Use the sheets available in Excel Unassigned(Not submitted)/ Assigned (Submitted) and details such as Transaction date, amount, currency etc.",
+    "row_index": 19,
+    "nested_tables": []
+  }
+]
