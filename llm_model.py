@@ -10,7 +10,7 @@ llm = AzureChatOpenAI(
     model="gpt-4o-mini",  
     azure_deployment=os.getenv("OPEN_AI_MODEL"), 
     api_key=os.getenv("OPENAI_API_KEY"),
-    temperature=0.6
+    temperature=0.2,
 )
 
 embedding = AzureOpenAIEmbeddings(    
