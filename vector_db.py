@@ -45,8 +45,8 @@ def build_chunks_with_metadata(md_texts: str):
     header_docs = header_splitter.split_text(md_texts)
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1500, 
-        chunk_overlap=250,
+        chunk_size=2000, 
+        chunk_overlap=300,
         separators=["\n### ", "\n## ", "\n# ", "\n\n", "\n", ". "],  
         add_start_index=True,
     )
@@ -71,7 +71,7 @@ def build_chunks_with_metadata(md_texts: str):
 #from langchain_community.vectorstores.faiss import FAISS
 #from llm_model import embedding  
 
-PERSIST_PATH = "./faiss_db_updated_All"
+PERSIST_PATH = "./faiss_db_updated_All_version_2"
 
 def create_vector_store(md_texts: str):
     docs = build_chunks_with_metadata(md_texts)
@@ -96,9 +96,10 @@ def retrieve_similar_documents(query: str, k: int):
 
 
 
-#md_text = " "
-#for i in range(2,35):
-#    md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
-#    md_text+="\n"
+md_text = " "
+for i in range(2,35):
+    md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
+    md_text+="\n"
 
-#create_vector_store(md_text)
+create_vector_store(md_text)
+
