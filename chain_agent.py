@@ -402,10 +402,20 @@ class ExtractionBatch(BaseModel):
                    "T&E Comments": "Create separate scenario for Amex and personal card for better clarity."
                    **
                    ) """
+#** "You are an expert in this domain. Your task is to generate as much possible as combinations based on all dimensions  provided. Think comprehensively and systematically across all dimensions.Cover every possible variation, exception, and conditional scenario.Ensure combinations are realistic and logically consistent." **
+#"If the Sub Expense Type field is Specified then for each Sub Expense Type field :
+#"Generate combination for that also by exploring the variations, exceptions, or conditional rules mentioned in the BRD.
 #4) **Combinations:** Generate separate RuleRows for every unique combination of **Booking Channel × Payment Method** mentioned or implied in BRD. If BRD lists multiple values (e.g., Booking Channel = CWT or Self Booking; Payment Method = Corporate Amex or Cash OOP), create RuleRows for **all combinations**.
+#Never use "No"
 SYSTEM_RuleBook = ("""  You are an expert AI assistant tasked with transforming Business Requirements Documents (BRD) into a structured RuleBook.
 
                         Carefully read the BRD and extract applicable expense policy rules using the RuleRow schema. Think step-by-step like an expert human analyst. Always return a  RuleRows (no extra text).
+                        Note ** - Think step-by-step like an expert human analyst:
+                                - Read BRD carefully and extract rules logically.
+                                - Validate each field for completeness and correctness.
+                                - Rotate complexity across rows (some full validations, some minimal).
+                                - Avoid robotic repetition; ensure realistic combinations.
+                                - Extract explicit details and logically interpret indirect hints without over-assumption. **
 
                         **Schema (canonical column names):**
                         - Expense Type
@@ -436,51 +446,54 @@ SYSTEM_RuleBook = ("""  You are an expert AI assistant tasked with transforming 
                           3) **Field Defaults and Constraints:**
                               - Sub Expense Type: If not mentioned, set to **"No"**.
                               - Country: If not mentioned, set to **"US or Canada"**.
-                              - Payment Method and Booking Channel: Must be valid values (e.g., **Corporate Amex**, **Cash OOP**; **CWT**, **Self Booking**). Never use "No".
-                          4) ** Combinations: **
-                                   - Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., "CWT", "Self Booking", or combined as "CWT or Self Booking").* If the BRD does NOT mention any Booking Channel, set the default value to "CWT or Self Booking" "
-                                   - Create separate RuleRows for each Action type: Approve, Reject, and Send Back.
-                                   - For Approve rows: Include full Conditions for Validation as per BRD.
-                                   - For Reject rows:
-                                        * Include Conditions for Validation rewritten to reflect failure points that caused rejection.
-                                        * Do NOT copy approval logic. Instead, highlight what was missing or invalid.
-                                        * Example: "Step 1: Receipt missing or incomplete. Step 2: Payment proof not provided for Cash OOP. Step 3: Itemization does not match receipt."
-                                        * These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval).
-                                   - For Send Back rows:
-                                        * Include Conditions for Validation rewritten to reflect fixable issues that caused send back.
-                                        * Example: "Step 1: Missing city of stay. Step 2: Incorrect room rent itemization. Step 3: Business purpose unclear."
-                                        * These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose).
-                                   - Use distinct codes for each Action type Only If the field is present in the BRD context.If the field is not present in BRD context use "" (empty string)
-                                         * Approval Code for Approve rows (e.g., A-APR-ALCO	--- Alcohol expenses for individual and team meals	All Associates )
-                                         * Rejection Code for Reject rows (e.g., REJ-NOSHOW	--- No Show Charges	Rejected as out-of-policy)
-                                         * Send Back Code for Send Back rows (e.g., SBR-BUSEXP --- Business Expenses related restriction	Not allowed)
-                          5) ** Input Fields: **
+                              - Payment Method and Booking Channel: Must be valid values (e.g., **Corporate Amex**, **Cash OOP**; **CWT**, **Self Booking**, **Corporate Amex or Cash OOP (Personal Card)**, **CWT or Self Booking**).
+                          4) ** Input Fields: **
+                               - Write in clear, human-readable language .
                                - Combine all required inputs from BRD into one field.
                                - Use clear separators (e.g., semicolons or line breaks).
                                - Include:
-                                    * System name (e.g., Concur)
-                                    * Receipt requirements (e.g., Itemized day-wise receipt with rent and tax separate)
-                                    * Payment proof conditions (e.g., For Personal Amex or Cash OOP if payment mode is not available)
-                                    * Any exceptional approval requirements (e.g., CFO approval if hotel rent exceeds $300 or $350 per day based on city)
+                                    * System name. For an example(e.g., Concur)
+                                    * Receipt requirements. For an example(e.g., Itemized day-wise receipt with rent and tax separate)
+                                    * Payment proof conditions. For an example(e.g., For Personal Amex or Cash OOP if payment mode is not available)
+                                    * Any exceptional approval requirements. For an example(e.g., CFO approval if hotel rent exceeds $300 or $350 per day based on city)
                                - Example: "Concur; Itemized day-wise receipt (Rent and tax should be separate); Payment proof (mandatory for Personal Amex or Cash OOP if payment mode is not available); Exceptional approval from CFO team if Hotel rent > $300 or $350 per day (based on city)"
-                          6) **Conditions for Validation (step-by-step, granular):**
+                          5) **Conditions for Validation (step-by-step, granular):**
+                              - Write down the logic step-by-step in human-readable language
                               - Clearly list required vs optional input fields.
-                              - Define value checks and thresholds (e.g., **$300/day cap** or **$350/day for certain cities**).
-                              - State dependencies (e.g., “If payment is personal Amex or Cash OOP, require payment proof.”).
-                              - Validate itemization structure (e.g., rent and tax **separate line items per day**).
+                              - Define value checks and thresholds .
+                              - State dependencies .
+                              - Validate itemization structure .
                               - Confirm Concur itemization **matches receipt**: dates, amounts, currency, vendor name (optional), transaction date equals **card swipe date**, **No. of guests = 1**, **Mode of payment** clearly indicated.
-                              - Include conditional triggers/exceptions (e.g., **CFO team approval** if over cap).
+                              - Include conditional triggers/exceptions .
                               - Include any audit rule/warning stated by BRD.
-                              - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail.
-                          7) If the field **Claim Submission Period** is not mentioned in the BRD, set its value to  **<180 days** by default.
-                          8) **Rejected / Send Back Rules:** If BRD specifies reject or send-back scenarios or codes, include those RuleRows and populate **Rejection Code** or **Send Back Code** accordingly. If not stated, leave code fields as **""** (empty string).
-                          9) **Action Field:** Use exactly one of "Approve", "Reject", or "Send Back" as per BRD.
-                          10) **Output Format:** A single **JSON array**. Each RuleRow must contain **all** schema fields (empty string "" if not specified). No extra commentary.
-                          11) ** Fill the field ** Approver Designation ** from the data in BRD context" **
-                          12) ** For any field not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.**"
-
-                          **Example styling for Conditions for Validation (not content):**
-                          "Conditions for Validation": "Step 1: Validate report header: Country/Employee Group must be US or Canada; Policy Type = Business Expense-US or Business Expense-Canada; Business purpose must relate to short business travel.\nStep 2: Validate receipt fields: Name of associate (fuzzy match), Guests = 1, Check-in and Check-out dates, City of stay, Mode of payment; Amount & Currency with itemization (Rent per day, Tax per day).\nStep 3: Room Rent Caps: <= $300/day (excluding 18 cities); <= $350/day (for 18 cities).\nStep 4: Concur itemization must match receipt exactly: dates, amounts, currency; Transaction date = card swipe date; Vendor name optional.\nStep 5: If payment is Personal Amex or Cash OOP, payment proof is mandatory.\nStep 6: If rent exceeds cap, CFO team exceptional approval required.\nAudit Rule/Warning: Validated."
+                              - ** Very Very Important ** : ** If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail. **
+                              - ** Vary completeness across rows:
+                                    • Some rows should include ALL checks (full validation set).
+                                    • Some rows should include only a FEW checks (e.g., 3–4 key validations).
+                                    • Others should include MINIMAL checks (e.g., 1–2 critical validations) . **
+                              - ** Rotate conditions so each row is unique and does not repeat the same set consecutively. **
+                          6) If the field **Claim Submission Period** is not mentioned in the BRD, set its value to  **<180 days** by default.
+                          7) **Rejected / Send Back Rules:** If BRD specifies reject or send-back scenarios or codes, include those RuleRows and populate **Rejection Code** or **Send Back Code** accordingly. If not stated, leave code fields as **""** (empty string).
+                          8) **Action Field:** Use exactly one of "Approve", "Reject", or "Send Back" as per BRD.
+                          9) **Output Format:** A single **JSON array**. Each RuleRow must contain **all** schema fields (empty string "" if not specified). No extra commentary.
+                          10) ** Fill the field ** Approver Designation ** from the data in BRD context" **
+                          11) ** For any field not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.**"
+                          12) ** Combinations: ** 
+                                    "** "For each Expense Type generate at least 15 - 20  combinations across dimensions (Expense Type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input Fields, Conditions for Validation, Claim Submission Period, Claim After(Purchase Date/check out/Travel)(Yes/No), Action (Approve / Reject / Send Back), APR / SBR / REJ Comments, Approval Code, Rejection Code, Send Back Code, Exceptions Approval Required (Yes/No), Approver Designation, Approve with Exception Comments, T&E Comments, etc.), subject to the policies. **
+                                    "You are an expert in this domain. Your task is to generate at least 20 combinations based on all dimensions  provided. Think comprehensively and systematically across all dimensions.Cover every possible variation, exception, and conditional scenario.Ensure combinations are realistic and logically consistent." **
+                                    "If the Sub Expense Type field is Specified then for each Sub Expense Type field :
+                                    "Generate combination for that also by exploring the variations, exceptions, or conditional rules mentioned in the BRD.
+                                    "Include edge cases (e.g., >180 days, missing receipts, duplicate detection, out-of-policy sub-types).
+                                    "You can form combinations using different fields, such as Claim After(Purchase Date/check out/Travel) (e.g. sometime it becomes ** No ** then what will be the ** Action (Approve / Reject / Send Back) ** at that time)  same as this also ** Claim submission period ** (e.g. sometime it becomes ** >180 ** then what will be the ** Action (Approve / Reject / Send Back) ** at that time) e.t.c  from the BRD."
+                                    "When forming different combinations, ensure each row has a unique and varied set of **Conditions for Validations** (e.g., Name mismatch, Amount mismatch, Date mismatch, Missing boarding pass, Missing payment proof, Wrong policy type, Missing itemization, Tips >15%, Currency mismatch, Duplicate detection, e.t.c). Do not repeat the same condition set in consecutive rows."
+                                    
+                          
+                          For an Example : "Conditions for Validation": 
+                                "Step 1: Validate report header: Country/Employee Group must be US or Canada; Policy Type = Business Expense-US or Business Expense-Canada; Business purpose must relate to short business travel."\n
+                                "Step 2: Validate receipt fields: Name of associate (fuzzy match), Guests = 1, Check-in and Check-out dates, City of stay, Mode of payment; Amount & Currency with itemization (Rent per day, Tax per day)."\n
+                                "Step 3: Room Rent Caps: <= $300/day (excluding 18 cities); <= $350/day (for 18 cities).\nStep 4: Concur itemization must match receipt exactly: dates, amounts, currency; Transaction date = card swipe date; Vendor name optional."\n
+                                "Step 5: If payment is Personal Amex or Cash OOP, payment proof is mandatory.\nStep 6: If rent exceeds cap, CFO team exceptional approval required."\n
+                                "Audit Rule/Warning: Validated."
                         
                          ** For an Example your output should be look like this 
                    
@@ -715,7 +728,14 @@ SYSTEM_RuleBook = ("""  You are an expert AI assistant tasked with transforming 
 
 SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense policy analysis.
           
-               Your task is to analyze the provided Business Requirements Document (BRD) and generate exactly 21 structured question–answer pairs that will help build a comprehensive RuleBook for the specified Expense Type.
+               Your task is to analyze the  and **Understand the BRD context thoroughly before generating output.**
+                          - Think step-by-step like an expert human analyst:
+                          - Read BRD carefully and extract rules logically.
+                          - Validate each field for completeness and correctness.
+                          - Rotate complexity across rows (some full validations, some minimal).
+                          - Avoid robotic repetition; ensure realistic combinations.
+                          - Extract explicit details and logically interpret indirect hints without over-assumption.
+                          - Identify the Expense Type first and keep it consistent across all questions.
           
                **Context Understanding:** Read the BRD as a human analyst would. Use explicit details; if indirect hints are present, logically fill the field without over-assumption.
                **Field Coverage:** Ensure the 21 Q/A pairs together cover these RuleRow fields:
@@ -728,7 +748,7 @@ SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense pol
                  - Input Fields
                  - Conditions for Validation
                  - Claim Submission Period
-                 - Claim After Purchase Date
+                 - Claim After(Purchase Date/check out/Travel)
                  - Action (Approve / Reject / Send Back)
                  - APR / SBR / REJ Comments
                  - Approval Code
@@ -744,6 +764,22 @@ SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense pol
                 1) First, extract the **Expense Type** from the BRD. Use only valid types (e.g., Airfare, Hotel, Individual Meals, Ground Transportation, etc.). Exclude non-relevant types (e.g., Intercompany Expenses, Visa Expense, Team Meals/Events/Awards).
                 2) If the BRD does not mention an Expense Type, use the **previously identified Expense Type** as default.
                 3) Generate **21 concise, single-topic questions**, **do not number the questions**, and **each question must include the Expense Type** (e.g., “What is the Sub Expense Type for Hotel?”).
+                    **Sub-Question Requirement:**
+                        For each of the 21 main questions:
+                        - Generate 1–4 sub-questions that explore variations, exceptions, or conditional rules mentioned in the BRD.
+                        - Provide concise answers for each sub-question.
+                        - Sub-questions should clarify:
+                            • What happens if a condition fails?
+                            • What additional documents are required?
+                            • What is the action (Approve/Reject/Send Back) in that scenario?
+                        - If the Sub Expense Type field is Specified then for each Sub Expense Type field :
+                            - Generate 1–4 sub-questions that explore variations, exceptions, or conditional rules mentioned in the BRD.
+                            - Provide concise answers for each sub-question.
+                            - Sub-questions should clarify:
+                               • What happens if a condition fails?
+                               • What additional documents are required?
+                               • What is the action (Approve/Reject/Send Back) in that scenario?
+                        - Keep sub-questions and answers in the same JSON block under a key called "sub_questions".
                 4) For any field not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.If no clear hint exists, set the answer to **"Not specified"**.
                 5) For **Conditions for Validation**, break down logic step-by-step:
                     - Specify input field dependencies
@@ -751,7 +787,13 @@ SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense pol
                     - Clarify mandatory vs optional fields
                     - Highlight conditional triggers/exceptions (e.g., CFO approval if above cap)
                     - Validate itemization consistency (e.g., rent and tax separated per day)
-                    - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail.
+                    - If the BRD references another section (e.g., 'Ensure compliance with validation rules in Section 5.2'), DO NOT copy the reference. 
+                    - Instead, formulate questions and answers in a way that extracts the actual validation logic from that section and presents it explicitly in step-by-step detail.
+                    - Vary completeness across rows:
+                        • Some rows should include ALL checks (full validation set).
+                        • Some rows should include only a FEW checks (e.g., 3–4 key validations).
+                        • Others should include MINIMAL checks (e.g., 1–2 critical validations).
+                    - Rotate conditions so each row is unique and does not repeat the same set consecutively.
                 6) For the ** Input Fields ** column:
                     - List all mandatory documents and systems mentioned in the BRD.
                     - Include them as a single string, separated by semicolons or line breaks.
@@ -760,8 +802,9 @@ SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense pol
                 8) For the fields **Approval Code**, **Rejection Code**, and **Send Back Code** :
                      - Ensure that you make the question and answer for these field in such a way such that it got retrieved from the vector DB.
                      - Always retrieve these values  from the vector database .
-                9) Generate question answer in this way :
-                   For an Example: -  'What is the Sub Expense Type for Hotel?' | 'The Sub Expense Type for Hotel is Laundry ' | ' Sub Expense Type ' 
+                9) ** Very Very Important ** -- ** If the BRD context references another section (e.g., 'Ensure compliance with validation rules in Section 5.2'), DO NOT copy the reference. Instead, formulate questions and answers in a way that extracts the actual validation logic from that section and presents it explicitly in step-by-step detail. **
+                10) Generate question answer in this way :
+                   For an Example: -  "what is the Payment Method for Hotel?" |  "The Payment Method for Hotel is Corporate Amex or Cash OOP (Personal Card)" |What if the payment method is Cash OOP and proof of payment is missing?"| "Send Back with code SBR-ADDSUP - Additional supporting not attached"|"What if the payment method is Corporate Amex and expense is future dated?"|"Approve if advance payment is on Corporate Amex; Reject if outside Corporate card"| ' Sub Expense Type ' 
                **Canonical field names:** Use exactly as listed (no synonyms).
                **Do not include any commentary outside the JSON.**
 """)
@@ -833,7 +876,7 @@ SYSTEM = ("""  You are a highly skilled AI assistant specializing in expense pol
           "Input Fields": {"type": "list"},
           "Conditions for Validation": {"type": "string"},
           "Claim Submission Period": {"type": "string", "examples": ["<180 days"]},
-          "Claim After Purchase Date": {"type": "enum", "values": ["Yes", "No"]},
+          "Claim After(Purchase Date/check out/Travel)": {"type": "enum", "values": ["Yes", "No"]},
           "Action (Approve / Reject / Send Back)": {"type": "enum", "values": ["Approve", "Reject", "Send Back"]},
           "APR / SBR / REJ Comments": {"type": "string"},
           "Approval Code": {"type": "string"},
@@ -892,63 +935,173 @@ prompt_extract = ChatPromptTemplate.from_messages([
 #])
 
 
-#     "12) Include all Booking Channel × Payment Method combinations explicitly as separate RuleRows. "
+#     "12) Include all Booking Channel × Payment Method combinations explicitly as separate RuleRows. " {ExpenseType}
+#'CWT or Self Booking'
+#"5) For ** Booking Channel ** : Always use valid values (e.g., CWT, Self Booking, CWT or SelfBooking ). Never use 'No'. "
+#"Develop a structured RuleBook for the given Expense Type: ** Airfare **. "
+#"Use the provided BRD context: {context}. "
 prompt_rulebook = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_RuleBook),
     ("human",
-     "Develop a structured RuleBook for the given Expense Type: {ExpenseType}. "
-     "Use the provided BRD context: {context}. "
-     "Follow the RuleRow schema with these columns: "
-     "Expense Type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input Fields, Conditions for Validation, "
-     "Claim Submission Period, Claim After Purchase Date, Action (Approve / Reject / Send Back), APR / SBR / REJ Comments, "
-     "Approval Code, Rejection Code, Send Back Code, Exceptions Approval Required (Yes/No), Approver Designation, "
-     "Approve with Exception Comments, T&E Comments. "
-
+     "Develop a structured RuleBook for the given Expense Type: ** Airfare **. "
+     "Your task is to generate at least 15 - 20  combinations across dimensions (Expense Type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input Fields, Conditions for Validation, Claim Submission Period, Claim After(Purchase Date/check out/Travel)(Yes/No), Action (Approve / Reject / Send Back), APR / SBR / REJ Comments, Approval Code, Rejection Code, Send Back Code, Exceptions Approval Required (Yes/No), Approver Designation, Approve with Exception Comments, T&E Comments, etc.), subject to the policies. Think comprehensively and systematically across all dimensions.Cover every possible variation, exception, and conditional scenario.Ensure combinations are realistic and logically consistent." 
+     "Use all available context in the BRD context: {context}."
+     "To develop the RuleBook from the BRD, please follow the instructions below:"
      "**Instructions:** "
      "1) Use only details explicitly mentioned in the BRD context. If a field is not mentioned but indirect hints exist, logically fill it without over-assumption. "
-     "2) If Sub Expense Type is not mentioned (e.g., Laundry, Tips and Gratitude, Internet, Airfare Cancellation/Rescheduling, Premium Lounge), set it to 'No'. Use 'No' only for this field. "
-     "3) For Country: If not mentioned, use 'US or Canada'. "
-     "4) For Booking Channel and Payment Method: Always use valid values (e.g., CWT, Self Booking, Corporate Amex, Cash OOP). Never use 'No'. "
-     "5) Generate separate RuleRows for every unique combination of Booking Channel × Payment Method mentioned or implied in BRD. "
-     "6) For the ** Input Fields ** column: "
-     "    * System name (e.g., Concur). " 
-     "    * Receipt requirements (e.g., Itemized day-wise receipt with rent and tax separate). "
-     "    * Payment proof conditions (e.g., For Personal Amex or Cash OOP if payment mode is not available). "
-     "    * Any exceptional approval requirements (e.g., CFO approval if hotel rent exceeds $300 or $350 per day based on city). "
-     "7) For Conditions for Validation: Break down logic step-by-step, including: "
-     "   - Required vs optional input fields "
-     "   - Value ranges or thresholds (e.g., $300/$350 caps) "
-     "   - Dependencies (e.g., payment proof for Cash OOP) "
-     "   - Conditional triggers or exceptions (e.g., CFO approval if above cap) "
-     "   - Itemization checks (e.g., rent and tax separate per day, Concur matches receipt) "
-     "   - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail."
-     "8) Include rules for rejected cases and send-back scenarios if mentioned. Populate Rejection Code or Send Back Code if available; otherwise leave as empty string. "
-     "9) Output must be a strict JSON array of RuleRows. Each RuleRow must include all columns defined in the schema. If a field is not specified, use an empty string \"\". "
-     "10) Do not include any commentary, markdown, or extra text outside the JSON. "
-     "11) Ensure Conditions for Validation is detailed and human-like, not summarized. "
-     "12) ** Combinations: ** "
-            "- Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., 'CWT', 'Self Booking', or combined as 'CWT or Self Booking').* If the BRD does NOT mention any Booking Channel, set the default value to 'CWT or Self Booking' "
-            "- Create separate RuleRows for each Action type: Approve, Reject, and Send Back."
-            "- For Approve rows: Include full Conditions for Validation as per BRD."
-            "- For Reject rows:"
-                "* Include Conditions for Validation rewritten to reflect failure points that caused rejection."
-                "* Do NOT copy approval logic. Instead, highlight what was missing or invalid."
-                "* Example: 'Step 1: Receipt missing or incomplete. Step 2: Payment proof not provided for Cash OOP. Step 3: Itemization does not match receipt'."
-                "* These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval)."
-            "- For Send Back rows:"
-                "* Include Conditions for Validation rewritten to reflect fixable issues that caused send back."
-                "* Example: 'Step 1: Missing city of stay. Step 2: Incorrect room rent itemization. Step 3: Business purpose unclear'."
-                "* These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose)."
-            "- Use distinct codes for each Action type Only If the field is present in the BRD context.If the field is not present in BRD context use "" (empty string)"
-                    "* Approval Code for Approve rows (e.g., A-APR-ALCO	--- Alcohol expenses for individual and team meals	All Associates )"
-                    "* Rejection Code for Reject rows (e.g., REJ-NOSHOW	--- No Show Charges	Rejected as out-of-policy)"
-                    "* Send Back Code for Send Back rows (e.g., SBR-BUSEXP --- Business Expenses related restriction	Not allowed)"
+     "2) If ** Sub Expense ** Type is not mentioned (e.g., Laundry, Tips and Gratitude, Internet, Airfare Cancellation/Rescheduling, Premium Lounge), set it to 'No'. Use 'No' only for this field. "
+     "3) For ** Country **: If not mentioned, use 'US or Canada'. "
+     "4) For ** Payment Method ** : Always use valid values (e.g., Corporate Amex, Cash OOP, Corporate Amex or Cash OOP ). Never use 'No'. "
+     "5) For ** Booking Channel ** : Always use valid values (e.g., CWT, Self Booking, CWT or SelfBooking ). If the field is not mentioned then  use 'No'. "
+     "6) For ** Eligibility ** : Always use valid values (e.g., Director and above, All, Below Director, AVP and above, AVP, VP, SVP, EVP, CTO, CEO, CFO, CAO and senior executives, e.t.c ) . Never use 'No'"
+     "7) For the ** Input Fields ** column: "
+            "    * System name. For an example (e.g., Concur). " 
+            "    * Receipt requirements. For an example (e.g., Itemized day-wise receipt with rent and tax separate). "
+            "    * Payment proof conditions. For an example (e.g., For Personal Amex or Cash OOP if payment mode is not available). "
+            "    * Any exceptional approval requirements. For an example (e.g., CFO approval if hotel rent exceeds $300 or $350 per day based on city). "
+            "    * Write in clear, human-readable language. "
+     "8) For ** Conditions for Validation ** : Write down the logic step-by-step in human-readable language, including: "
+            "   - Required vs optional input fields "
+            "   - Value ranges or thresholds  "
+            "   - Dependencies "
+            "   - Conditional triggers or exceptions "
+            "   - Itemization checks  "
+            "   - Very very Important : ** - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail. ** " 
+            "   ** - Vary completeness across rows:"
+                        "• Some rows should include ALL checks (full validation set)."
+                        "• Some rows should include only a FEW checks (e.g., 3–4 key validations)."
+                        "• Others should include MINIMAL checks (e.g., 1–2 critical validations).  ** "
+            "   ** - Rotate conditions so each row is unique and does not repeat the same set consecutively. ** "
+     "9) If the field ** Claim Submission Period ** is not mentioned in the BRD, set its value to  **<180 days** by default."
+     "10) For ** Claim After(Purchase Date/check out/Travel) ** : Always use valid values (e.g., Yes, No). Never use 'Empty String'. "
+     "11) For ** Action(Approve/Reject/Send back) ** : Always use valid values (e.g., Approve, Reject, Send Back). Never use 'Empty String'. "
+     "12) For ** APR or SBR or REJ Comments ** : Always use valid values like(e.g., Claim submitted after 180 Day cap, Incorrect Policy Type, Expense can be approved only after Stay is completed; no partial transaction approval, e.t.c). Use Empty String when data is not provided in BRD. "
+     "13) For ** Approval code ** : The Valid values should be look like this (e.g. APE-BUSI - Business Expenses related restriction, A-APR-LAUN - Laundry less than 3 nights, D-APR-NOSO - NO SHOW CHARGES, e.t.c) . If BRD provides additional approval codes, use them based on context. If not mentioned, use empty string "". "
+     "14) For ** Rejection code ** : The Valid values should be look like this (e.g. REJ-FUTPYT - FUTURE DATED PAYMENT, REJ-WALLET - Incorrect receipt attached, need to resubmit, REJ-DUPLIC - Duplicate not accepted, e.t.c). If BRD provides additional approval codes, use them based on context. If not mentioned, use empty string "". "
+     "13) For ** Send back code ** : The Valid values should be look like this (e.g. SBR-180DAY - 180 days transaction, SBR-WRNPOL - Wrong Policy Type Selected, SBR-ADDSUP - Additional supporting not attached, e.t.c). If BRD provides additional approval codes, use them based on context. If not mentioned, use empty string "". "
+     "14) For ** Exceptions  approval required(Yes/No) ** : Always use valid values (e.g., Yes, No). Never use 'Empty String'."
+     "15) For ** Approver designation ** : The Valid values should be look like this (e.g., EC, Director & above (associate <D) HCM (Associate =>D), CFOTravelException@cognizant.com, e.t.c) from the data in BRD context. If the BRD provides additional approver designation , you may use them as required based on the context. If not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.Otherwise use Empty String. "
+     "16) For ** Approve with Exception ** : The Valid values should be look like this (e.g., A-APEC-180 - 180 days transaction, A-APE-ITEM - ITEMIZED RECEIPTS, APE-BUSI - Business Expenses related restriction, e.t.c.). If the BRD provides additional approve with exception , you may use them as required based on the context.  Use Empty String when data is not provided in BRD. "
+     "17) For ** Comments ** : The Valid values should be look like this (e.g., Need clarification, if D+ approval is needed or dependant stay is not eligible and to be rejected., [BOT should still call that out as an observation for the PPA on the variance to take a call.] , e.t.c).  If the BRD provides additional comments , you may use them as required based on the context. Use Empty String when data is not provided in BRD. "
+     "18) For ** T&E Comment ** : The Valid values should be look like this (e.g.,  Validate whether it is a  Personal AMEx card if payment mode starts with AX or AMEX., It should be 'Expense other than Hotel ' and not 'expense Type Other than hotel ', e.t.c .). If the BRD provides additional T&E Comment , you may use them as required based on the context . If the field is not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.Otherwise use ** Ok **.  "
+    )
+])
+
+
+
+"""Example output format: 
+     "Expense Type" : "Airfare",
+     "Sub Expense Type": "Airfare Cancellation",
+     "Country": "US or Canada",
+     "Payment Method": "Corporate Amex",
+     "Booking Channel": "CWT or Self Booking",
+     "Eligibility": "All",
+     "Input Fields": "Concur","Airline Invoice or booking receipt or CWT Receipt or Itinerary or EMD (based on booking)", "Cancellation receipt with amount highlighted",
+     "Conditions for Validation": "Associate claiming for cancellation charges, with charges highlighted in receipt.\n\n"
+                                                "Note:\n"
+                                                "- Validate reason for cancel in comments.\n"
+                                                "- Check for any refund amount shown in negative, in payment transaction.",
+     "Claim Submission Period": "<180 days",
+     "Claim After Purchase Date": "Yes",
+     "Action (Approve / Reject / Send Back)": "Approve",
+     "APR / SBR / REJ Comments": "Refer to the Comments and Audit trail to understand the history of the report.",
+     "Approval Code": "A-APR-CANC - Cancellation / Rescheduled charges",
+     "Rejection Code": "",
+     "Send Back Code": "",
+     "Exceptions Approval Required (Yes/No)": "No",
+     "Approver Designation": "",
+     "Approve with Exception Comments": "",
+     "T&E Comments": "Create separate scenario for Amex and personal card for better clarity." """
+
+
+#("human", "BRD Section:\n {chunk} \n\n"
+#                                            "Related Context :\n {context} \n\n" 
+#                                            "Now extract RuleRow strictly that follow the valid rules.")
+
+
+System_combinations = """
+                      You are an expert in this domain. Your task is to generate at least 90 - 100 unique and logically consistent combinations as possible using all dimensions provided below.
+                      Objectives:
+                           - Think comprehensively and systematically across all dimensions.
+                           - Cover every possible variation, exception, and conditional scenario that may occur.
+                           - Ensure combinations are realistic and adhere to the applicable policy/logic.
+                      Dimensions :
+                      <DIMENSIONS>
+                      e.g., Expense Type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input Fields, Conditions for Validation, Submission Period, Claim After (Yes/No), Action (Approve/Reject/Send Back), Comments, Approval Code, Rejection Code, Send Back Code, Exceptions Required (Yes/No), Approver Designation, Exception Comments, T&E Comments, T&E Remarks.
+                      Special Rule:
+                           If the **Sub [Dimension]** (e.g., Sub Expense Type) is specified:
+                           - Generate combinations for each specified sub value.
+                           - Explore variations, exceptions, and conditional rules relevant to that sub value.
+                           - Include edge cases (e.g., missing documents, name mismatch, allowance thresholds, late submission, payment proof required, exception approvals).
+                """
+
+prompt_combination = ChatPromptTemplate.from_messages([
+    ("system", System_combinations),
+    ("human","You have develop the combiantion for these {data} by keeping the system prompt in your mind")
+    ])
+
+
+
+chain_extract = prompt_extract | llm.with_structured_output(ExtractionBatch)
+chain_rulebook = prompt_rulebook | llm.with_structured_output(List[RuleRow])  
+chain_combinations = prompt_combination | llm.with_structured_output(List[RuleRow])
+
+#data = chain_extract.invoke({"data": Str_contect})
+#print("data",data)
+#print(chain_rulebook.invoke({"data": data}))
+
+
+"Follow the RuleRow schema with these columns: "
+"Expense Type, Sub Expense Type, Country, Payment Method, Booking Channel, Eligibility, Input Fields, Conditions for Validation, "
+"Claim Submission Period, Claim After Purchase Date, Action (Approve / Reject / Send Back), APR / SBR / REJ Comments, "
+"Approval Code, Rejection Code, Send Back Code, Exceptions Approval Required (Yes/No), Approver Designation, "
+"Approve with Exception Comments, T&E Comments. "
+
+"**Instructions:** "
+"1) Use only details explicitly mentioned in the BRD context. If a field is not mentioned but indirect hints exist, logically fill it without over-assumption. "
+"2) If Sub Expense Type is not mentioned (e.g., Laundry, Tips and Gratitude, Internet, Airfare Cancellation/Rescheduling, Premium Lounge), set it to 'No'. Use 'No' only for this field. "
+"3) For Country: If not mentioned, use 'US or Canada'. "
+"4) For Booking Channel and Payment Method: Always use valid values (e.g., CWT, Self Booking, Corporate Amex, Cash OOP). Never use 'No'. "
+"5) Generate separate RuleRows for every unique combination of Booking Channel × Payment Method mentioned or implied in BRD. "
+"6) For the ** Input Fields ** column: "
+"    * System name (e.g., Concur). " 
+"    * Receipt requirements (e.g., Itemized day-wise receipt with rent and tax separate). "
+"    * Payment proof conditions (e.g., For Personal Amex or Cash OOP if payment mode is not available). "
+"    * Any exceptional approval requirements (e.g., CFO approval if hotel rent exceeds $300 or $350 per day based on city). "
+"7) For Conditions for Validation: Write down the logic step-by-step, including: "
+"   - Required vs optional input fields "
+"   - Value ranges or thresholds (e.g., $300/$350 caps) "
+"   - Dependencies (e.g., payment proof for Cash OOP) "
+"   - Conditional triggers or exceptions (e.g., CFO approval if above cap) "
+"   - Itemization checks (e.g., rent and tax separate per day, Concur matches receipt) "
+"   - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail."
+"8) Include rules for rejected cases and send-back scenarios if mentioned. Populate Rejection Code or Send Back Code if available; otherwise leave as empty string. "
+"9) Output must be a strict JSON array of RuleRows. Each RuleRow must include all columns defined in the schema. If a field is not specified, use an empty string \"\". "
+"10) Do not include any commentary, markdown, or extra text outside the JSON. "
+"11) Ensure Conditions for Validation is detailed and human-like, not summarized. "
+"12) ** Combinations: ** "
+"- Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., 'CWT', 'Self Booking', or combined as 'CWT or Self Booking').* If the BRD does NOT mention any Booking Channel, set the default value to 'CWT or Self Booking' "
+"- Create separate RuleRows for each Action type: Approve, Reject, and Send Back."
+"- For Approve rows: Include full Conditions for Validation as per BRD."
+"- For Reject rows:"
+"* Include Conditions for Validation rewritten to reflect failure points that caused rejection."
+"* Do NOT copy approval logic. Instead, highlight what was missing or invalid."
+"* Example: 'Step 1: Receipt missing or incomplete. Step 2: Payment proof not provided for Cash OOP. Step 3: Itemization does not match receipt'."
+"* These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval)."
+"- For Send Back rows:"
+"* Include Conditions for Validation rewritten to reflect fixable issues that caused send back."
+"* Example: 'Step 1: Missing city of stay. Step 2: Incorrect room rent itemization. Step 3: Business purpose unclear'."
+"* These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose)."
+"- Use distinct codes for each Action type Only If the field is present in the BRD context.If the field is not present in BRD context use "" (empty string)"
+"* Approval Code for Approve rows (e.g., A-APR-ALCO	--- Alcohol expenses for individual and team meals	All Associates )"
+"* Rejection Code for Reject rows (e.g., REJ-NOSHOW	--- No Show Charges	Rejected as out-of-policy)"
+"* Send Back Code for Send Back rows (e.g., SBR-BUSEXP --- Business Expenses related restriction	Not allowed)"
                     
-     "13) Quality requirements: No generalizations, no missing fields, no markdown, no numbering. "
-     "14) If the field **Claim Submission Period** is not mentioned in the BRD, set its value to  **<180 days** by default."
-     "15) Fill the field ** Approver Designation ** from the data in BRD context"
-     "16) *For any field not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.*"
-     """Example output format: 
+"13) Quality requirements: No generalizations, no missing fields, no markdown, no numbering. "
+"14) If the field **Claim Submission Period** is not mentioned in the BRD, set its value to  **<180 days** by default."
+"15) Fill the field ** Approver Designation ** from the data in BRD context"
+"16) *For any field not mentioned but indirect hints are present, you may logically fill the field using only what is supported by the document. Do not infer or assume anything beyond what is explicitly or implicitly supported by the BRD context.*"
+"""Example output format: 
      "Expense Type" : "Airfare",
      "Sub Expense Type": "Airfare Cancellation",
      "Country": "US or Canada",
@@ -972,20 +1125,87 @@ prompt_rulebook = ChatPromptTemplate.from_messages([
      "Approve with Exception Comments": "",
      "T&E Comments": "Create separate scenario for Amex and personal card for better clarity." 
      """
-    )
-])
+
+"""19) ** Combinations: ** "
+            "- Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., 'CWT', 'Self Booking', or combined as 'CWT or Self Booking').* If the BRD does NOT mention any Booking Channel, set the default value to 'CWT or Self Booking' "
+            "- Do not arrange them in a strict sequential order; instead, randomize the order of creation. "
+            "- Create separate RuleRows for each Action type: Approve, Reject, and Send Back. "
+            "- For Approve rows: Include full Conditions for Validation as per BRD."
+            "- For Reject rows:"
+                   "* Include Conditions for Validation rewritten to reflect failure points that caused rejection."
+                   "* Do NOT copy approval logic. Instead, highlight what was missing or invalid."
+                   "* Example: 'Step 1: Receipt missing or incomplete. Step 2: Payment proof not provided for Cash OOP. Step 3: Itemization does not match receipt'."
+                   "* These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval)."
+            "- For Send Back rows:"
+                   "* Include Conditions for Validation rewritten to reflect fixable issues that caused send back."
+                   "* Example: 'Step 1: Missing city of stay. Step 2: Incorrect room rent itemization. Step 3: Business purpose unclear'."
+                   "* These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose)."
+                   "- Use distinct codes for each Action type Only If the field is present in the BRD context.If the field is not present in BRD context use "" (empty string)"""
+
+"""4) ** Combinations: **
+                                   - Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., "CWT", "Self Booking", or combined as "CWT or Self Booking").* If the BRD does NOT mention any Booking Channel, set the default value to "CWT or Self Booking" "
+                                   - Create separate RuleRows for each Action type: Approve, Reject, and Send Back.
+                                   - For Approve rows: Include full Conditions for Validation as per BRD.
+                                   - For Reject rows:
+                                        * Include Conditions for Validation rewritten to reflect failure points that caused rejection.
+                                        * Do NOT copy approval logic. Instead, highlight what was missing or invalid.
+                                        * Example: "Step 1: Receipt missing or incomplete. Step 2: Payment proof not provided for Cash OOP. Step 3: Itemization does not match receipt."
+                                        * These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval).
+                                   - For Send Back rows:
+                                        * Include Conditions for Validation rewritten to reflect fixable issues that caused send back.
+                                        * Example: "Step 1: Missing city of stay. Step 2: Incorrect room rent itemization. Step 3: Business purpose unclear."
+                                        * These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose).
+                                   - Use distinct codes for each Action type Only If the field is present in the BRD context.If the field is not present in BRD context use "" (empty string)
+                                         * Approval Code for Approve rows (e.g., A-APR-ALCO	--- Alcohol expenses for individual and team meals	All Associates )
+                                         * Rejection Code for Reject rows (e.g., REJ-NOSHOW	--- No Show Charges	Rejected as out-of-policy)
+                                         * Send Back Code for Send Back rows (e.g., SBR-BUSEXP --- Business Expenses related restriction	Not allowed)"""
+
+"""12) ** Combinations: ** "
+                                    "- Do NOT create separate rows for each Booking Channel. Instead: * If the BRD specifies Booking Channels, use them exactly as mentioned (e.g., 'CWT', 'Self Booking', or combined as 'CWT or Self Booking').* If the BRD does NOT mention any Booking Channel, set the default value to ' CWT or Self Booking ' "
+                                    Create separate RuleRows for each Action type:
+                                        ** Approve, Reject, and Send Back. **
+                                        ** Important: **
+                                        ➤ Do NOT arrange RuleRows in a strict sequential order.
+                                        ➤ Randomize the order of creation so that for one Condition for Validation, you may generate an Approve case, and later for another Condition, you may generate another Approve case, followed by a Reject case or Send Back case for different conditions.
+                                        ➤ The output should look mixed, not grouped by action type.
+                                    For Approve rows:
+                                        ➤ Include full Conditions for Validation as per BRD.
+                                    For Reject rows:
+                                        ➤ Rewrite Conditions for Validation to reflect failure points that caused rejection.
+                                        ➤ Do NOT copy approval logic. Instead, highlight what was missing or invalid.
+                                        ➤ Example:
+                                        Step 1: Receipt missing or incomplete
+                                        Step 2: Payment proof not provided for Cash OOP
+                                        Step 3: Itemization does not match receipt
+                                        ➤ These failure points MUST come from BRD or indirect hints (e.g., missing receipt, missing payment proof, exceeding rent cap without CFO approval).
+                                    For Send Back rows:
+                                        ➤ Rewrite Conditions for Validation to reflect fixable issues that caused send back.
+                                        ➤ Example:
+                                        Step 1: Missing city of stay
+                                        Step 2: Incorrect room rent itemization
+                                        Step 3: Business purpose unclear
+                                        ➤ These fixable issues MUST come from BRD or indirect hints (e.g., missing city of stay, incorrect itemization, unclear business purpose).
+                                    "You can form combinations using different fields, such as Claim after check-out (e.g. sometime it becomes ** No ** then what will be the ** Action (Approve / Reject / Send Back) ** at that time)  same as this also ** Claim submission period ** (e.g. sometime it becomes ** >180 ** then what will be the ** Action (Approve / Reject / Send Back) ** at that time) e.t.c  from the BRD."
+                          """
+
+"""For ** Conditions for Validation ** : Break down logic step-by-step, including: "
+            "   - Required vs optional input fields "
+            "   - Value ranges or thresholds (e.g., $300/$350 caps) "
+            "   - Dependencies (e.g., payment proof for Cash OOP) "
+            "   - Conditional triggers or exceptions (e.g., CFO approval if above cap) "
+            "   - Itemization checks (e.g., rent and tax separate per day, Concur matches receipt) "
+            "   - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail."""
+
+"""5) **Conditions for Validation (step-by-step, granular):**
+                              - Clearly list required vs optional input fields.
+                              - Define value checks and thresholds (e.g., **$300/day cap** or **$350/day for certain cities**).
+                              - State dependencies (e.g., “If payment is personal Amex or Cash OOP, require payment proof.”).
+                              - Validate itemization structure (e.g., rent and tax **separate line items per day**).
+                              - Confirm Concur itemization **matches receipt**: dates, amounts, currency, vendor name (optional), transaction date equals **card swipe date**, **No. of guests = 1**, **Mode of payment** clearly indicated.
+                              - Include conditional triggers/exceptions (e.g., **CFO team approval** if over cap).
+                              - Include any audit rule/warning stated by BRD.
+                              - If the BRD references another section (e.g., “Ensure compliance with validation rules in Section 5.2”), DO NOT copy the reference. Instead, extract the actual validation logic from that section and write it explicitly in step-by-step detail."""
 
 
-
-#("human", "BRD Section:\n {chunk} \n\n"
-#                                            "Related Context :\n {context} \n\n" 
-#                                            "Now extract RuleRow strictly that follow the valid rules.")
-
-
-
-chain_extract = prompt_extract | llm.with_structured_output(ExtractionBatch)
-chain_rulebook = prompt_rulebook | llm.with_structured_output(List[RuleRow])  
-
-#data = chain_extract.invoke({"data": Str_contect})
-#print("data",data)
-#print(chain_rulebook.invoke({"data": data}))
+#"For each Expense Type, generate at least 18 - 20 structured RuleRows combinations by varying fields (Sub Expense Type, Payment Method, Eligibility, Conditions for Validation, Action, Codes)."
+#"You are an expert in this domain. Your task is to generate as much possible as combinations based on all dimensions  provided. Think comprehensively and systematically across all dimensions.Cover every possible variation, exception, and conditional scenario.Ensure combinations are realistic and logically consistent." 
