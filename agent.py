@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph, END, START
-from chain_agent import chain_extract, chain_rulebook,read_brd_md,chunk_brd_by_langchain,RuleRow
+from chain_agent import chain_extract, chain_rulebook,read_brd_md,chunk_brd_by_langchain,RuleRow,chain_combinations
 from langchain_core.messages import BaseMessage,HumanMessage
 from typing import List, Optional,TypedDict,Annotated,operator,Dict
 from langgraph.graph.message import add_messages
@@ -13,6 +13,9 @@ import pandas as pd
 from sentence_transformers import CrossEncoder
 import numpy as np
 from langgraph.checkpoint.memory import MemorySaver
+from langchain_community.callbacks.manager import get_openai_callback
+import math
+
 #from agent_vectordb import State
 
 def func_ranking_rag(query:str,retrieved_documents:List[dict]):
@@ -22,14 +25,14 @@ def func_ranking_rag(query:str,retrieved_documents:List[dict]):
         unique_documents.append(retrieved_documents[i]["docs"])
         lst_score.append(retrieved_documents[i]["score"])
     scores_float = np.array([float(s) for s in lst_score])
-    top_indices = np.argsort(scores_float)[::-1][:2]
+    top_indices = np.argsort(scores_float)[::-1][:4]
     top_documents = [unique_documents[i] for i in top_indices]
     context = "\n\n".join(top_documents)
     return context
     
 
 def chunk_brd(md_text: str, max_chars: int) -> List[str]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=max_chars, chunk_overlap=300)
     docs = splitter.create_documents([md_text])
     return [d.page_content for d in docs]
 
@@ -39,24 +42,32 @@ def extractor_node(state: State) -> State:
     state["chunks"] = chunk_brd(md_text, max_chars=2000)
     state["processed_idx"] = 0
     state["all_rules"] = []
-    if not os.path.exists("./faiss_db_updated_All"):
+    if not os.path.exists("./faiss_db_updated_All_version_2"):
         create_vector_store(md_text)
     return state
 
 
 def rag_node(state: State) -> State:
+    print("length chunck",len(state["chunks"]))
+    size = math.ceil(len(state["chunks"])/5)
     idx = state["processed_idx"]
-    if idx >= len(state["chunks"]):
+    if idx >= len(state["chunks"])-size:
         state["current_context"] = ""
         return state
     #print("chunk_str",state["chunks"][idx])
-    chunk = chain_extract.invoke({"data" : state["chunks"][idx]}).model_dump(exclude_none=True)
+    #print("join ----------------------- ",state["chunks"][idx:4])
+    batch = state["chunks"][idx: idx + size]  
+    joined_text = "\n\n".join(batch)
+
+    print("Joined --------- ",joined_text)
+    #chunk = chain_extract.invoke({"data" : state["chunks"][idx:4]}).model_dump(exclude_none=True)
+    chunk = chain_extract.invoke({"data" : joined_text}).model_dump(exclude_none=True)
     print("chunck --------------------- ",chunk)
     
     Expensetype = chunk["Expensetype"]
     print("chunk ----------------- -------------- ",chunk)
     row = chunk["rows"]
-    retrieved = retrieve_similar_documents(row, k=10)
+    retrieved = retrieve_similar_documents(row, k=15)
     #retrieved = retrieve_similar_documents(state["chunks"][idx], k=3)
     #print("retrieved",retrieved)
     #retrieved = [doc.page_content for doc in retrieved]
@@ -94,7 +105,7 @@ def rulebook_node(state: State) -> State:
     #for r in result:
     #    state["all_rules"].append(r.model_dump(exclude_none=True))
     print("all_rules -------------- -------------- ",state["all_rules"])
-    state["processed_idx"] += 1
+    state["processed_idx"] += 4
     return state
 
 
@@ -152,7 +163,8 @@ def validator_node(state: State) -> State:
     return state
 
 def loop_condition_node(state: State):
-    if state["processed_idx"] < len(state["chunks"]):
+    size = math.ceil(len(state["chunks"])/10)
+    if state["processed_idx"] < len(state["chunks"])-size:
         return "rule_book"
     return END
 
@@ -191,16 +203,29 @@ if __name__ == "__main__":
         return Path(md_path).read_text(encoding="utf-8")
     
     #md_text = " "
-    #for i in range(2,5):
+    #for i in range(2,10):
     #    md_text+=read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_{i}.md")
     #    md_text+="\n"
     md_text = read_brd_md(fr"C:\Users\2436230\OneDrive - Cognizant\Desktop\python\brd_main_steps_nested\markdown\mainstep_2.md")
     #thread = {"configurable": {"thread_id": "777"}}
     #value = chunk_brd(md_text, max_chars=3500)
-    final = graph.invoke({"md_text": md_text},config={"recursion_limit":5000})
-    rules = final.get("all_rules", [])
-    stats = final.get("stats", {})
+    #Number_of_chunks = (len(md_text) / (1500 - 200)) + 1
+    #print(len(md_text))
+    #print(Number_of_chunks)
+    with get_openai_callback() as cb1:
+        final = graph.invoke({"md_text": md_text}, config={"recursion_limit": 5000})
 
+
+    #final = graph.invoke({"md_text": md_text},config={"recursion_limit":5000})
+    #rules: List[RuleRow] = chain_combinations.invoke({
+    #        "data": final.get("all_rules", []),
+    #    })
+    rules = final.get("all_rules", [])
+    print("rules",rules)
+    #new_rules = [r for r in rules['args']]
+    #print("new rules -------------- -------------- ",new_rules)
+    stats = final.get("stats", {})
+     
     ruleses = []
 
     for i in rules:
@@ -211,5 +236,10 @@ if __name__ == "__main__":
     print("Length ----- ruleses",len(ruleses))
     df = pd.DataFrame(ruleses)
     print(df)
-    excel_file = "rulebook_airfare_2_1_1_cond.xlsx"
+    excel_file = "rulebook_Airfare_2_cond_1.5.xlsx"
     df.to_excel(excel_file, index=False)
+    print(f"Prompt tokens: {cb1.prompt_tokens}")
+    print(f"Completion tokens: {cb1.completion_tokens}")
+    print(f"Total tokens: {cb1.total_tokens}")
+    print(f"Total cost: ${cb1.total_cost}")
+
